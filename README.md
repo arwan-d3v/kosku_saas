@@ -47,3 +47,12 @@ Marketplace & Property Management System built with Next.js, NestJS, Supabase, C
 ## Storage Policy (Cloudflare R2)
 - `properties/{tenant_id}/{property_id}/images/`
 - `users/{user_id}/documents/`
+
+
+## Running the project concurrently
+To run both API and Web in development mode:
+
+1. Open a terminal for the API:
+   `cd apps/api && npm run start:dev`
+2. Open another terminal for the Web:
+   `cd apps/web && npm run dev`
