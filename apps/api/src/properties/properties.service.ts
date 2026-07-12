@@ -5,7 +5,7 @@ import { SupabaseService } from '../common/supabase/supabase.service';
 export class PropertiesService {
   constructor(private readonly supabaseService: SupabaseService) {}
 
-  async createProperty(userId: string, data: { name: string; address: string; description?: string }) {
+  async createProperty(userId: string, data: { name: string; address: string; description?: string; facilities?: string[] }) {
     const supabase = this.supabaseService.getClient();
 
     const { data: property, error } = await supabase
@@ -15,7 +15,8 @@ export class PropertiesService {
         name: data.name,
         address: data.address,
         description: data.description || '',
-        city: 'Unknown' // Adding a default city as it is required in schema, can be modified later
+        city: 'Unknown', // Adding a default city as it is required in schema, can be modified later
+        facilities: data.facilities || []
       })
       .select()
       .single();
@@ -139,5 +140,45 @@ export class PropertiesService {
     }
 
     return property;
+  }
+
+  async updateProperty(userId: string, propertyId: string, data: { name?: string; address?: string; description?: string; facilities?: string[] }) {
+    const supabase = this.supabaseService.getClient();
+
+    const updatePayload: any = {};
+    if (data.name !== undefined) updatePayload.name = data.name;
+    if (data.address !== undefined) updatePayload.address = data.address;
+    if (data.description !== undefined) updatePayload.description = data.description;
+    if (data.facilities !== undefined) updatePayload.facilities = data.facilities;
+
+    const { data: property, error } = await supabase
+      .from('properties')
+      .update(updatePayload)
+      .eq('id', propertyId)
+      .eq('owner_id', userId)
+      .select()
+      .single();
+
+    if (error) {
+      throw new InternalServerErrorException(error.message);
+    }
+
+    return property;
+  }
+
+  async deleteProperty(userId: string, propertyId: string) {
+    const supabase = this.supabaseService.getClient();
+
+    const { error } = await supabase
+      .from('properties')
+      .delete()
+      .eq('id', propertyId)
+      .eq('owner_id', userId);
+
+    if (error) {
+      throw new InternalServerErrorException(error.message);
+    }
+
+    return { success: true };
   }
 }

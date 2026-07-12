@@ -9,7 +9,7 @@ export class PropertiesController {
   constructor(private readonly propertiesService: PropertiesService) {}
 
   @Post()
-  async createProperty(@Req() request: any, @Body() body: { name: string; address: string; description?: string }) {
+  async createProperty(@Req() request: any, @Body() body: { name: string; address: string; description?: string; facilities?: string[] }) {
     const userId = request.user.id;
     return this.propertiesService.createProperty(userId, body);
   }
@@ -24,6 +24,22 @@ export class PropertiesController {
   async getProperty(@Req() request: any, @Param('id') propertyId: string) {
     const userId = request.user.id;
     return this.propertiesService.getPropertyById(userId, propertyId);
+  }
+
+  @Patch(':id')
+  async updateProperty(
+    @Req() request: any, 
+    @Param('id') propertyId: string, 
+    @Body() body: { name?: string; address?: string; description?: string; facilities?: string[] }
+  ) {
+    const userId = request.user.id;
+    return this.propertiesService.updateProperty(userId, propertyId, body);
+  }
+
+  @Delete(':id')
+  async deleteProperty(@Req() request: any, @Param('id') propertyId: string) {
+    const userId = request.user.id;
+    return this.propertiesService.deleteProperty(userId, propertyId);
   }
 
   @Post(':id/images')

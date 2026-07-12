@@ -15,7 +15,7 @@ export default function PropertiesPage() {
   const [isSlideOverOpen, setIsSlideOverOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   
-  const [formData, setFormData] = useState({ name: '', address: '', description: '' });
+  const [formData, setFormData] = useState<{name: string, address: string, description: string, facilities: string[]}>({ name: '', address: '', description: '', facilities: [] });
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
@@ -36,13 +36,13 @@ export default function PropertiesPage() {
 
   const openAddForm = () => {
     setEditingId(null);
-    setFormData({ name: '', address: '', description: '' });
+    setFormData({ name: '', address: '', description: '', facilities: [] });
     setIsSlideOverOpen(true);
   };
 
   const openEditForm = (property: any) => {
     setEditingId(property.id);
-    setFormData({ name: property.name, address: property.address, description: property.description || '' });
+    setFormData({ name: property.name, address: property.address, description: property.description || '', facilities: property.facilities || [] });
     setIsSlideOverOpen(true);
   };
 
@@ -232,7 +232,18 @@ export default function PropertiesPage() {
                     <div className="grid grid-cols-2 gap-3">
                       {['AC', 'Kamar Mandi Dalam', 'Dapur Umum', 'Dapur Pribadi', 'Air PDAM', 'Listrik Token', 'Listrik Termasuk', 'WiFi Gratis', 'Parkir Motor', 'Parkir Mobil', 'Akses 24 Jam', 'CCTV'].map(facility => (
                         <label key={facility} className="flex items-start gap-2 cursor-pointer group">
-                          <input type="checkbox" className="mt-1 w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500" />
+                          <input 
+                            type="checkbox" 
+                            checked={formData.facilities.includes(facility)}
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                setFormData({ ...formData, facilities: [...formData.facilities, facility] });
+                              } else {
+                                setFormData({ ...formData, facilities: formData.facilities.filter(f => f !== facility) });
+                              }
+                            }}
+                            className="mt-1 w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500" 
+                          />
                           <span className="text-sm font-medium text-slate-600 group-hover:text-slate-800 transition">{facility}</span>
                         </label>
                       ))}
