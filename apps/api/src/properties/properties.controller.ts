@@ -1,4 +1,4 @@
-import { Controller, Post, Get, Body, Req, UseGuards, Param, UseInterceptors, UploadedFile } from '@nestjs/common';
+import { Controller, Post, Get, Patch, Delete, Body, Req, UseGuards, Param, UseInterceptors, UploadedFile } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { PropertiesService } from './properties.service';
 import { SupabaseAuthGuard } from '../auth/supabase-auth.guard';

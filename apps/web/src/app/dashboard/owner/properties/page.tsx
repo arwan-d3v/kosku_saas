@@ -133,7 +133,23 @@ export default function PropertiesPage() {
                         <div className="w-10 h-10 bg-indigo-50 rounded-xl flex items-center justify-center text-indigo-600">
                            <Building size={20} />
                         </div>
-                        <span className="font-bold text-slate-800">{prop.name}</span>
+                        <div>
+                          <span className="font-bold text-slate-800 block">{prop.name}</span>
+                          {prop.facilities && prop.facilities.length > 0 && (
+                            <div className="flex flex-wrap gap-1.5 mt-2">
+                              {prop.facilities.slice(0, 3).map((f: string) => (
+                                <span key={f} className="text-[10px] px-2 py-0.5 bg-indigo-50 text-indigo-600 font-medium rounded border border-indigo-100/50">
+                                  {f}
+                                </span>
+                              ))}
+                              {prop.facilities.length > 3 && (
+                                <span className="text-[10px] px-2 py-0.5 bg-slate-50 text-slate-500 font-medium rounded border border-slate-200">
+                                  +{prop.facilities.length - 3}
+                                </span>
+                              )}
+                            </div>
+                          )}
+                        </div>
                       </div>
                     </td>
                     <td className="py-5 px-4 font-medium text-slate-500 max-w-[200px] truncate text-sm flex items-center gap-2 mt-2">
