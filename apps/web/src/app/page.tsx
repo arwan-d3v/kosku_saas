@@ -1,15 +1,13 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
-import { Search, Home, User, ShieldCheck } from 'lucide-react';
+import { Search, Home, User, ShieldCheck, MapPin, Building, Bookmark, History, CreditCard, HeadphonesIcon } from 'lucide-react';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
 
 export default function LandingPage() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [role, setRole] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const checkUser = async () => {
@@ -26,119 +24,82 @@ export default function LandingPage() {
         setIsAuthenticated(false);
         setRole(null);
       }
-      setLoading(false);
     };
     checkUser();
   }, []);
 
+  const menuItems = [
+    { label: 'Cari Kos', icon: <Search className="text-blue-500" size={28} />, href: '/search' },
+    { label: 'Kos Sekitar', icon: <MapPin className="text-teal-500" size={28} />, href: '/search?nearby=true' },
+    { label: 'Kos Saya', icon: <Building className="text-indigo-500" size={28} />, href: '/dashboard/tenant' },
+    { label: 'Favorit', icon: <Bookmark className="text-purple-500" size={28} />, href: '/dashboard/tenant' },
+    { label: 'Transaksi', icon: <CreditCard className="text-emerald-500" size={28} />, href: '/dashboard/tenant' },
+    { label: 'Bantuan', icon: <HeadphonesIcon className="text-orange-500" size={28} />, href: '#' },
+  ];
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-100 via-purple-100 to-teal-100 overflow-hidden pb-24 md:pb-0">
-      {/* Liquid Glass Navbar */}
-      <nav className="fixed top-6 left-1/2 -translate-x-1/2 w-[90%] max-w-5xl z-50">
-        <div className="liquid-glass rounded-full px-8 py-4 flex items-center justify-between shadow-lg">
-          <Link href="/" className="text-2xl font-black bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
-            KosanKita
+    <div className="min-h-screen bg-slate-50 pb-24 md:pb-0 font-sans">
+      {/* Blue Header Section */}
+      <div className="bg-blue-600 text-white pt-6 pb-28 px-5 rounded-b-[40px] md:rounded-b-[60px] relative overflow-hidden">
+        {/* Subtle background decoration */}
+        <div className="absolute top-10 right-0 opacity-10">
+          <svg width="200" height="200" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M45.5 -25.5C124.5 -55.5 187.5 10 216 67.5C244.5 125 187.5 198 123 214C58.5 230 -25.5 181 -61.5 116.5C-97.5 52 -33.5 4.5 45.5 -25.5Z" fill="white"/>
+          </svg>
+        </div>
+
+        <div className="flex justify-between items-center mb-8 relative z-10">
+          <Link href="/" className="text-xl font-black tracking-tight flex items-center gap-1.5">
+            KosKu <span className="w-2.5 h-2.5 rounded-full bg-yellow-400"></span>
           </Link>
-          
-          <div className="hidden md:flex items-center gap-8 font-medium text-slate-700">
-            <Link href="/search" className="hover:text-indigo-600 transition-colors">Cari Kos</Link>
-            <Link href="#" className="hover:text-indigo-600 transition-colors">Tentang Kami</Link>
-            <Link href="#" className="hover:text-indigo-600 transition-colors">Bantuan</Link>
+          <div className="flex gap-4">
+             {isAuthenticated ? (
+               <Link href={role === 'TENANT_ADMIN' || role === 'SUPERADMIN' ? '/dashboard/owner' : '/dashboard/tenant'} className="text-sm font-semibold tracking-wide flex items-center gap-1">
+                 <User size={16} /> AKUN
+               </Link>
+             ) : (
+               <Link href="/login" className="text-sm font-semibold tracking-wide">
+                 MASUK
+               </Link>
+             )}
           </div>
+        </div>
+        
+        <div className="relative z-10 flex items-center justify-between">
+          <div className="max-w-[70%]">
+            <div className="inline-flex items-center gap-1.5 text-xs font-semibold bg-white/20 px-2 py-1 rounded-md mb-3 border border-white/30 backdrop-blur-sm">
+              <ShieldCheck size={14} /> Terverifikasi
+            </div>
+            <h2 className="text-[22px] md:text-3xl font-bold leading-snug mb-2">
+              Pilihan Kos Terbaik <br/> di Sekitar Kampus
+            </h2>
+            <p className="text-sm opacity-90 mb-5 font-medium">Mulai dari Rp 500.000 / bulan</p>
+            <div className="text-xs border border-white/30 rounded-full px-2.5 py-1 inline-block">1/3</div>
+          </div>
+        </div>
+        
+        <div className="absolute bottom-6 right-5 text-xs font-medium bg-black/20 px-3 py-1.5 rounded-full backdrop-blur-md cursor-pointer hover:bg-black/30 transition">
+          Lihat Semua Promo
+        </div>
+      </div>
 
-          <div className="flex gap-4 items-center">
-            {loading ? (
-              <span className="text-slate-400 text-xs font-bold">Memuat...</span>
-            ) : isAuthenticated ? (
-              <Link href={role === 'TENANT_ADMIN' || role === 'SUPERADMIN' ? '/dashboard/owner' : '/dashboard/tenant'}>
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  className="clay-button bg-indigo-500 text-white !px-4 !py-2 text-sm flex items-center gap-1.5"
-                >
-                  <User size={14} /> Dashboard
-                </motion.button>
+      {/* Main Menu Grid Section */}
+      <div className="px-4 -mt-14 relative z-20">
+        <div className="bg-slate-50 border border-slate-200/60 rounded-3xl p-5 shadow-[0_10px_40px_-15px_rgba(0,0,0,0.1)]">
+          <h3 className="text-lg font-bold text-slate-800 mb-5">Hey kamu, mau cari apa?</h3>
+          <div className="grid grid-cols-3 gap-3">
+            {menuItems.map((item, idx) => (
+              <Link href={item.href} key={idx} className="bg-white border border-slate-100 rounded-2xl p-4 flex flex-col items-center justify-center gap-3 shadow-[0_2px_15px_-5px_rgba(0,0,0,0.05)] active:scale-95 transition-transform hover:border-blue-100">
+                 {item.icon}
+                 <span className="text-[11px] font-semibold text-slate-700 text-center">{item.label}</span>
               </Link>
-            ) : (
-              <>
-                <Link href="/login" className="hover:text-indigo-600 font-bold transition-colors text-slate-700 text-sm px-2">
-                  Masuk
-                </Link>
-                <Link href="/register">
-                  <motion.button
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    className="clay-button bg-indigo-500 text-white !px-4 !py-2 text-sm"
-                  >
-                    Daftar
-                  </motion.button>
-                </Link>
-              </>
-            )}
+            ))}
           </div>
         </div>
-      </nav>
-
-      {/* Hero Section */}
-      <main className="pt-40 pb-20 px-6 max-w-7xl mx-auto flex flex-col items-center text-center">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8 }}
-        >
-          <h1 className="text-5xl md:text-7xl font-black text-slate-800 leading-tight mb-6">
-            Cari Kos Idaman,<br />
-            <span className="text-indigo-600">Tanpa Drama!</span>
-          </h1>
-          <p className="text-xl text-slate-600 max-w-2xl mb-10 font-medium">
-            Sistem manajemen kos paling sat-set untuk Gen Z. Booking, bayar, dan lapor kerusakan cukup dari satu aplikasi.
-          </p>
-
-          <div className="flex flex-col sm:flex-row gap-6 justify-center">
-            <Link href="/search">
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                className="clay-button bg-indigo-500 text-white text-lg flex items-center gap-2"
-              >
-                <Search size={20} />
-                Temukan Kamar
-              </motion.button>
-            </Link>
-            <Link href={isAuthenticated ? (role === 'TENANT_ADMIN' || role === 'SUPERADMIN' ? '/dashboard/owner/properties' : '/dashboard/tenant') : '/login'}>
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                className="clay-button bg-white text-indigo-500 text-lg flex items-center gap-2"
-              >
-                <Home size={20} />
-                Kelola Properti
-              </motion.button>
-            </Link>
-          </div>
-        </motion.div>
-
-        {/* Decorative Elements */}
-        <div className="mt-20 grid grid-cols-1 md:grid-cols-3 gap-10 w-full">
-          {[
-            { icon: <ShieldCheck className="text-emerald-500" />, title: "Aman & Terpercaya", desc: "Verifikasi pemilik kos 100% transparan." },
-            { icon: <Search className="text-indigo-500" />, title: "Pencarian Pintar", desc: "Filter sesuai budget dan fasilitas kamu." },
-            { icon: <User className="text-purple-500" />, title: "Manajemen Mudah", desc: "Bayar tagihan otomatis gak pakai ribet." }
-          ].map((feature, idx) => (
-            <motion.div
-              key={idx}
-              whileHover={{ y: -10 }}
-              className="clay-card p-8 flex flex-col items-center text-center"
-            >
-              <div className="w-16 h-16 rounded-2xl bg-slate-50 flex items-center justify-center mb-6 shadow-inner">
-                {feature.icon}
-              </div>
-              <h3 className="text-xl font-bold text-slate-800 mb-2">{feature.title}</h3>
-              <p className="text-slate-500">{feature.desc}</p>
-            </motion.div>
-          ))}
-        </div>
-      </main>
+      </div>
+      
+      {/* Spacer to allow scrolling past bottom nav */}
+      <div className="h-10"></div>
     </div>
   );
 }

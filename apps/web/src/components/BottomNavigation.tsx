@@ -88,8 +88,8 @@ export default function BottomNavigation() {
   }
 
   return (
-    <div className="lg:hidden fixed bottom-0 left-0 w-full z-50 px-4 pb-4 pt-2 bg-gradient-to-t from-slate-50/90 via-slate-50/40 to-transparent pointer-events-none">
-      <div className="max-w-md mx-auto bg-white/80 backdrop-blur-xl border border-slate-200/50 rounded-3xl p-2 flex items-center justify-around shadow-[0_10px_30px_-5px_rgba(0,0,0,0.1)] pointer-events-auto">
+    <div className="lg:hidden fixed bottom-0 left-0 w-full z-50 bg-white border-t border-slate-200 shadow-[0_-4px_20px_-10px_rgba(0,0,0,0.1)]">
+      <div className="flex items-center justify-around py-2">
         {navItems.map((item, idx) => {
           const isButton = !!item.onClick;
           const isActive = !isButton && (
@@ -98,36 +98,26 @@ export default function BottomNavigation() {
           );
 
           const content = (
-            <motion.div 
-              whileTap={{ scale: 0.9 }}
-              className="flex flex-col items-center justify-center py-2 px-3 relative cursor-pointer"
-            >
-              {isActive && (
-                <motion.span 
-                  layoutId="activeTabIndicator"
-                  transition={{ type: "spring", stiffness: 380, damping: 30 }}
-                  className="absolute inset-0 bg-indigo-50 border border-indigo-100/50 rounded-2xl -z-10"
-                />
-              )}
-              <span className={`transition-colors duration-250 ${isActive ? 'text-indigo-600' : 'text-slate-400'}`}>
+            <div className="flex flex-col items-center justify-center relative cursor-pointer min-w-[64px]">
+              <span className={`transition-colors duration-250 mb-1 ${isActive ? 'text-blue-600' : 'text-slate-500'}`}>
                 {item.icon}
               </span>
-              <span className={`text-[10px] font-black mt-1 ${isActive ? 'text-indigo-600' : 'text-slate-400'}`}>
+              <span className={`text-[11px] font-medium ${isActive ? 'text-blue-600 font-bold' : 'text-slate-500'}`}>
                 {item.label}
               </span>
-            </motion.div>
+            </div>
           );
 
           if (isButton) {
             return (
-              <button key={idx} onClick={item.onClick} className="outline-none focus:outline-none">
+              <button key={idx} onClick={item.onClick} className="outline-none focus:outline-none w-full">
                 {content}
               </button>
             );
           }
 
           return (
-            <Link key={idx} href={item.href!} className="outline-none">
+            <Link key={idx} href={item.href!} className="outline-none w-full">
               {content}
             </Link>
           );
