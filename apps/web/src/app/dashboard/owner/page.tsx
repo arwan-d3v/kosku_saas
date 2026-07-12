@@ -7,28 +7,71 @@ import { fetchWithAuth } from '@/lib/api-client';
 
 export default function OwnerDashboard() {
   const [propertiesCount, setPropertiesCount] = useState(0);
+  const [availableRoomsCount, setAvailableRoomsCount] = useState(0);
+  const [revenue, setRevenue] = useState(0);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetchProperties();
+    fetchDashboardData();
   }, []);
 
-  const fetchProperties = async () => {
+  const fetchDashboardData = async () => {
     try {
       setLoading(true);
-      const data = await fetchWithAuth('/properties');
-      setPropertiesCount(data.length || 0);
+      
+      // 1. Fetch properties
+      const properties = await fetchWithAuth('/properties');
+      setPropertiesCount(properties.length || 0);
+
+      // 2. Fetch rooms for each property to calculate available rooms
+      let totalAvailableRooms = 0;
+      const roomsPromises = properties.map((prop: any) => 
+        fetchWithAuth(`/properties/${prop.id}/rooms`)
+          .then((roomsData: any[]) => {
+            const availCount = roomsData.filter((r: any) => r.is_available).length;
+            totalAvailableRooms += availCount;
+          })
+          .catch((err) => console.error(`Failed to fetch rooms for property ${prop.id}:`, err))
+      );
+      await Promise.all(roomsPromises);
+      setAvailableRoomsCount(totalAvailableRooms);
+
+      // 3. Fetch bookings to calculate revenue (Sum of PAID bookings)
+      const bookings = await fetchWithAuth('/bookings');
+      const paidBookings = bookings.filter((b: any) => b.status === 'PAID');
+      const totalRevenue = paidBookings.reduce((sum: number, b: any) => sum + Number(b.total_price), 0);
+      setRevenue(totalRevenue);
+
     } catch (error) {
-      console.error('Failed to fetch properties:', error);
+      console.error('Failed to fetch dashboard data:', error);
     } finally {
       setLoading(false);
     }
   };
 
+  const formatRupiah = (number: number) => {
+    return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(number);
+  };
+
   const stats = [
-    { label: 'Total Properti', value: loading ? '...' : propertiesCount, icon: <Home className="text-indigo-500" />, color: 'bg-indigo-50' },
-    { label: 'Kamar Kosong', value: '5', icon: <DoorOpen className="text-mint-500" />, color: 'bg-emerald-50' },
-    { label: 'Pendapatan', value: 'Rp 42jt', icon: <Wallet className="text-lavender-500" />, color: 'bg-purple-50' },
+    { 
+      label: 'Total Properti', 
+      value: loading ? '...' : propertiesCount, 
+      icon: <Home className="text-indigo-500" />, 
+      color: 'bg-indigo-50' 
+    },
+    { 
+      label: 'Kamar Kosong', 
+      value: loading ? '...' : availableRoomsCount, 
+      icon: <DoorOpen className="text-mint-500" />, 
+      color: 'bg-emerald-50' 
+    },
+    { 
+      label: 'Total Pendapatan', 
+      value: loading ? '...' : formatRupiah(revenue), 
+      icon: <Wallet className="text-lavender-500" />, 
+      color: 'bg-purple-50' 
+    },
   ];
 
   return (
@@ -46,7 +89,7 @@ export default function OwnerDashboard() {
             </div>
             <div>
               <p className="text-sm font-bold text-slate-400">{stat.label}</p>
-              <p className="text-3xl font-black text-slate-800">{stat.value}</p>
+              <p className="text-2xl md:text-3xl font-black text-slate-800">{stat.value}</p>
             </div>
           </motion.div>
         ))}

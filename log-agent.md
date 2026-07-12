@@ -14,3 +14,5 @@
 | Jules (Principal Architect) | 2026-07-11 22:41:06 UTC | Setup Supabase utility in Next.js and global SupabaseModule in NestJS. Updated README with CLI instructions. | - | Ready for hand-over. |
 | Antigravity (Fullstack Engineer) | 2026-07-12 00:03:00 UTC | Fixed Supabase Auth Trigger RLS issue, created Properties and Rooms API (NestJS), built Owner Dashboard for Property & Room Management (Next.js), created Public Property Details UI (Claymorphism). | 1. Public API Integration, 2. Media Storage Setup, 3. CI/CD Architecture | 1. Setup Public APIs, 2. Supabase Storage, 3. GitHub Actions CI/CD |
 | Antigravity (Fullstack Engineer) | 2026-07-12 00:10:28 UTC | Created CI-CD-guide.md documenting deployment steps for Vercel and Render. Pushed codebase to main branch. | Build UI Search Page, Deploy Application | 1. Deployment, 2. Search Feature |
+| Antigravity (Fullstack Engineer) | 2026-07-12 07:26:00 UTC | Created NestJS Bookings/Payment APIs, refactored frontend Search to pull dynamically, built Tenant Dashboard & Glassmorphic booking/payment checkout overlay, and optimized mobile UI with Bottom Navigation. | - | Ready for production deployment |
+
