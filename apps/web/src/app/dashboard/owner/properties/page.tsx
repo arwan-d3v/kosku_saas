@@ -2,14 +2,18 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Plus, X } from 'lucide-react';
+import { Plus, X, Pencil, Trash2, Building, MapPin } from 'lucide-react';
 import Link from 'next/link';
 import { fetchWithAuth } from '@/lib/api-client';
 
 export default function PropertiesPage() {
   const [properties, setProperties] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  
+  // Slide-over state
+  const [isSlideOverOpen, setIsSlideOverOpen] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  
   const [formData, setFormData] = useState({ name: '', address: '', description: '' });
   const [submitting, setSubmitting] = useState(false);
 
@@ -29,20 +33,48 @@ export default function PropertiesPage() {
     }
   };
 
-  const handleAddProperty = async (e: React.FormEvent) => {
+  const openAddForm = () => {
+    setEditingId(null);
+    setFormData({ name: '', address: '', description: '' });
+    setIsSlideOverOpen(true);
+  };
+
+  const openEditForm = (property: any) => {
+    setEditingId(property.id);
+    setFormData({ name: property.name, address: property.address, description: property.description || '' });
+    setIsSlideOverOpen(true);
+  };
+
+  const handleDelete = async (id: string) => {
+    if (!confirm("Yakin ingin menghapus properti ini? Semua kamar terkait akan terhapus.")) return;
+    try {
+      await fetchWithAuth(`/properties/${id}`, { method: 'DELETE' });
+      fetchProperties();
+    } catch (error) {
+      alert("Gagal menghapus properti.");
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
       setSubmitting(true);
-      await fetchWithAuth('/properties', {
-        method: 'POST',
-        body: JSON.stringify(formData),
-      });
-      setIsModalOpen(false);
-      setFormData({ name: '', address: '', description: '' });
-      fetchProperties(); // Refresh data
+      if (editingId) {
+        await fetchWithAuth(`/properties/${editingId}`, {
+          method: 'PATCH',
+          body: JSON.stringify(formData),
+        });
+      } else {
+        await fetchWithAuth('/properties', {
+          method: 'POST',
+          body: JSON.stringify(formData),
+        });
+      }
+      setIsSlideOverOpen(false);
+      fetchProperties();
     } catch (error) {
-      console.error('Failed to add property:', error);
-      alert('Gagal menambahkan kosan. Silakan coba lagi.');
+      console.error('Failed to save property:', error);
+      alert('Gagal menyimpan kosan. Silakan coba lagi.');
     } finally {
       setSubmitting(false);
     }
@@ -50,14 +82,17 @@ export default function PropertiesPage() {
 
   return (
     <div>
-      <div className="clay-card p-8">
+      <div className="bg-white rounded-3xl p-8 border border-slate-100 shadow-[0_2px_10px_rgba(0,0,0,0.04)]">
         <div className="flex items-center justify-between mb-8">
-          <h3 className="text-xl font-black text-slate-800">Daftar Kosan Anda</h3>
+          <div>
+            <h3 className="text-xl font-black text-slate-800">Daftar Properti Kosan</h3>
+            <p className="text-sm text-slate-500 font-medium">Kelola semua properti dan gedung kos Anda.</p>
+          </div>
           <motion.button 
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
-            onClick={() => setIsModalOpen(true)}
-            className="clay-button bg-indigo-500 text-white !px-4 flex items-center gap-2"
+            onClick={openAddForm}
+            className="bg-blue-600 text-white font-bold py-2.5 px-5 rounded-xl shadow-lg shadow-blue-600/20 flex items-center gap-2 hover:bg-blue-700 transition"
           >
             <Plus size={18} />
             Tambah Kosan
@@ -66,32 +101,58 @@ export default function PropertiesPage() {
 
         <div className="overflow-x-auto">
           {loading ? (
-            <div className="text-center py-8 text-slate-500 font-bold">Memuat data...</div>
+            <div className="text-center py-12 text-slate-400 font-bold flex flex-col items-center gap-3">
+               <div className="w-8 h-8 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin"></div>
+               Memuat data...
+            </div>
           ) : properties.length === 0 ? (
-            <div className="text-center py-8 text-slate-500 font-bold">Belum ada properti kosan. Klik "Tambah Kosan" untuk mulai.</div>
+            <div className="text-center py-12 text-slate-500 font-bold bg-slate-50 rounded-2xl border border-dashed border-slate-300">
+              Belum ada properti kosan. Klik "Tambah Kosan" untuk mulai.
+            </div>
           ) : (
-            <table className="w-full text-left border-separate border-spacing-y-4">
+            <table className="w-full text-left">
               <thead>
-                <tr className="text-slate-400 font-bold text-sm uppercase tracking-wider">
-                  <th className="pb-2 px-4">Nama Properti</th>
-                  <th className="pb-2 px-4">Alamat</th>
-                  <th className="pb-2 px-4">Total Kamar</th>
-                  <th className="pb-2 px-4"></th>
+                <tr className="text-slate-400 font-bold text-xs uppercase tracking-wider border-b border-slate-100">
+                  <th className="pb-4 px-4">Info Properti</th>
+                  <th className="pb-4 px-4">Alamat</th>
+                  <th className="pb-4 px-4 text-center">Total Kamar</th>
+                  <th className="pb-4 px-4 text-right">Aksi</th>
                 </tr>
               </thead>
               <tbody>
                 {properties.map((prop) => (
-                  <tr key={prop.id} className="bg-slate-50/50 hover:bg-slate-50 transition-colors rounded-2xl group">
-                    <td className="py-4 px-4 font-bold text-slate-700 rounded-l-2xl">{prop.name}</td>
-                    <td className="py-4 px-4 font-medium text-slate-500 max-w-xs truncate">{prop.address}</td>
-                    <td className="py-4 px-4">
-                      <span className="px-3 py-1 rounded-full text-xs font-bold bg-indigo-100 text-indigo-600">
-                        {/* We will update room counts later. For now, 0. */}
+                  <tr key={prop.id} className="border-b border-slate-50 hover:bg-slate-50/80 transition-colors group">
+                    <td className="py-5 px-4">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 bg-indigo-50 rounded-xl flex items-center justify-center text-indigo-600">
+                           <Building size={20} />
+                        </div>
+                        <span className="font-bold text-slate-800">{prop.name}</span>
+                      </div>
+                    </td>
+                    <td className="py-5 px-4 font-medium text-slate-500 max-w-[200px] truncate text-sm flex items-center gap-2 mt-2">
+                      <MapPin size={14} className="text-slate-400 flex-shrink-0" />
+                      {prop.address}
+                    </td>
+                    <td className="py-5 px-4 text-center">
+                      <span className="px-3 py-1 rounded-full text-xs font-bold bg-blue-50 text-blue-600 border border-blue-100">
                         0 Kamar
                       </span>
                     </td>
-                    <td className="py-4 px-4 text-right rounded-r-2xl">
-                      <Link href={`/dashboard/owner/properties/${prop.id}`} className="clay-button bg-white text-indigo-500 !px-4 !py-1 text-xs opacity-0 group-hover:opacity-100 transition-opacity focus:opacity-100">Kelola Kamar</Link>
+                    <td className="py-5 px-4">
+                      <div className="flex items-center justify-end gap-2">
+                        <Link href={`/dashboard/owner/properties/${prop.id}`}>
+                           <button className="px-4 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-bold text-slate-600 hover:text-blue-600 hover:border-blue-200 transition">
+                             Kamar
+                           </button>
+                        </Link>
+                        <button onClick={() => openEditForm(prop)} className="p-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition">
+                          <Pencil size={16} />
+                        </button>
+                        <button onClick={() => handleDelete(prop.id)} className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition">
+                          <Trash2 size={16} />
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -101,73 +162,99 @@ export default function PropertiesPage() {
         </div>
       </div>
 
-      {/* Add Property Modal */}
+      {/* Slide-over Panel for Add/Edit Property */}
       <AnimatePresence>
-        {isModalOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/20 backdrop-blur-sm">
+        {isSlideOverOpen && (
+          <>
+            {/* Backdrop */}
             <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              className="clay-card w-full max-w-md p-8 relative"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setIsSlideOverOpen(false)}
+              className="fixed inset-0 bg-slate-900/20 backdrop-blur-sm z-40"
+            />
+            
+            {/* Drawer */}
+            <motion.div
+              initial={{ x: '100%' }}
+              animate={{ x: 0 }}
+              exit={{ x: '100%' }}
+              transition={{ type: "spring", bounce: 0, duration: 0.4 }}
+              className="fixed top-0 right-0 h-full w-full max-w-md bg-white shadow-2xl z-50 flex flex-col border-l border-slate-100"
             >
-              <button 
-                onClick={() => setIsModalOpen(false)}
-                className="absolute top-6 right-6 text-slate-400 hover:text-slate-600 transition-colors"
-              >
-                <X size={24} />
-              </button>
-              
-              <h2 className="text-2xl font-black text-slate-800 mb-6">Tambah Kosan Baru</h2>
-              
-              <form onSubmit={handleAddProperty} className="space-y-4">
-                <div>
-                  <label className="block text-slate-600 font-bold text-sm mb-2">Nama Kosan</label>
-                  <input
-                    type="text"
-                    required
-                    value={formData.name}
-                    onChange={(e) => setFormData({...formData, name: e.target.value})}
-                    placeholder="Contoh: Kosan Mawar"
-                    className="w-full px-4 py-3 bg-white/50 border border-slate-200 rounded-2xl outline-none focus:ring-2 ring-indigo-300 transition-all font-medium text-slate-700"
-                  />
-                </div>
-                
-                <div>
-                  <label className="block text-slate-600 font-bold text-sm mb-2">Alamat Lengkap</label>
-                  <textarea
-                    required
-                    value={formData.address}
-                    onChange={(e) => setFormData({...formData, address: e.target.value})}
-                    placeholder="Masukkan alamat lengkap..."
-                    rows={3}
-                    className="w-full px-4 py-3 bg-white/50 border border-slate-200 rounded-2xl outline-none focus:ring-2 ring-indigo-300 transition-all font-medium text-slate-700 resize-none"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-slate-600 font-bold text-sm mb-2">Deskripsi (Opsional)</label>
-                  <textarea
-                    value={formData.description}
-                    onChange={(e) => setFormData({...formData, description: e.target.value})}
-                    placeholder="Deskripsi fasilitas umum kosan..."
-                    rows={2}
-                    className="w-full px-4 py-3 bg-white/50 border border-slate-200 rounded-2xl outline-none focus:ring-2 ring-indigo-300 transition-all font-medium text-slate-700 resize-none"
-                  />
-                </div>
-
-                <motion.button
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  type="submit"
-                  disabled={submitting}
-                  className="w-full py-4 mt-4 bg-gradient-to-r from-indigo-500 to-purple-500 text-white font-bold rounded-2xl shadow-lg shadow-indigo-200 hover:shadow-xl transition-all disabled:opacity-50"
+              <div className="p-6 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+                <h2 className="text-xl font-black text-slate-800">
+                  {editingId ? 'Edit Properti' : 'Tambah Properti Baru'}
+                </h2>
+                <button 
+                  onClick={() => setIsSlideOverOpen(false)}
+                  className="w-8 h-8 flex items-center justify-center rounded-full text-slate-400 hover:bg-slate-200 hover:text-slate-700 transition"
                 >
-                  {submitting ? 'Menyimpan...' : 'Simpan Kosan'}
-                </motion.button>
-              </form>
+                  <X size={20} />
+                </button>
+              </div>
+              
+              <div className="p-6 flex-1 overflow-y-auto">
+                <form id="property-form" onSubmit={handleSubmit} className="space-y-5">
+                  <div>
+                    <label className="block text-slate-700 font-bold text-sm mb-2">Nama Kosan</label>
+                    <input
+                      type="text"
+                      required
+                      value={formData.name}
+                      onChange={(e) => setFormData({...formData, name: e.target.value})}
+                      placeholder="Contoh: Kosan Mawar Eksklusif"
+                      className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl outline-none focus:ring-2 ring-blue-500/20 focus:border-blue-500 transition-all font-medium text-slate-700 placeholder-slate-400"
+                    />
+                  </div>
+                  
+                  <div>
+                    <label className="block text-slate-700 font-bold text-sm mb-2">Alamat Lengkap</label>
+                    <textarea
+                      required
+                      value={formData.address}
+                      onChange={(e) => setFormData({...formData, address: e.target.value})}
+                      placeholder="Masukkan alamat lengkap dengan RT/RW..."
+                      rows={3}
+                      className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl outline-none focus:ring-2 ring-blue-500/20 focus:border-blue-500 transition-all font-medium text-slate-700 resize-none placeholder-slate-400"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-slate-700 font-bold text-sm mb-2">Deskripsi (Opsional)</label>
+                    <textarea
+                      value={formData.description}
+                      onChange={(e) => setFormData({...formData, description: e.target.value})}
+                      placeholder="Fasilitas umum: WiFi, Parkir luas, dll..."
+                      rows={4}
+                      className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl outline-none focus:ring-2 ring-blue-500/20 focus:border-blue-500 transition-all font-medium text-slate-700 resize-none placeholder-slate-400"
+                    />
+                  </div>
+                </form>
+              </div>
+
+              <div className="p-6 border-t border-slate-100 bg-slate-50">
+                <div className="flex gap-3">
+                   <button
+                     type="button"
+                     onClick={() => setIsSlideOverOpen(false)}
+                     className="flex-1 py-3 bg-white border border-slate-200 text-slate-600 font-bold rounded-xl hover:bg-slate-100 transition"
+                   >
+                     Batal
+                   </button>
+                   <button
+                     form="property-form"
+                     type="submit"
+                     disabled={submitting}
+                     className="flex-1 py-3 bg-blue-600 text-white font-bold rounded-xl shadow-lg shadow-blue-600/20 hover:bg-blue-700 transition disabled:opacity-50"
+                   >
+                     {submitting ? 'Menyimpan...' : 'Simpan'}
+                   </button>
+                </div>
+              </div>
             </motion.div>
-          </div>
+          </>
         )}
       </AnimatePresence>
     </div>
