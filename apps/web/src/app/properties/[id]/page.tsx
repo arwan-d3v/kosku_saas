@@ -308,11 +308,28 @@ export default function PublicPropertyDetails({ params }: { params: Promise<{ id
       <hr className="mx-6 border-slate-100 my-4" />
       
       {/* Description Section */}
-      <div className="px-6 pb-10">
+      <div className="px-6 pb-6">
         <h3 className="text-lg font-black text-slate-800 mb-3">Tentang Kosan Ini</h3>
         <p className="text-slate-500 text-sm leading-relaxed font-medium">
           {property.description || "Kosan nyaman, strategis, dan aman."}
         </p>
+      </div>
+
+      <hr className="mx-6 border-slate-100 my-2" />
+
+      {/* 5. Google Maps Location Section */}
+      <div className="px-6 pb-10 mt-4">
+        <h3 className="text-lg font-black text-slate-800 mb-3">Lokasi</h3>
+        <div className="w-full h-48 md:h-64 rounded-2xl overflow-hidden border border-slate-200 shadow-sm relative bg-slate-100">
+          <iframe 
+            width="100%" 
+            height="100%" 
+            frameBorder="0" 
+            style={{ border: 0 }}
+            src={`https://maps.google.com/maps?q=${encodeURIComponent(property.address + ' ' + property.city)}&t=&z=15&ie=UTF8&iwloc=&output=embed`}
+            allowFullScreen
+          ></iframe>
+        </div>
       </div>
 
       {/* 4. Sticky Bottom Action Bar */}

@@ -121,8 +121,8 @@ export default function LandingPage() {
           </div>
         </div>
         
-        <div className="absolute bottom-6 right-5 text-xs font-medium bg-black/20 px-3 py-1.5 rounded-full backdrop-blur-md cursor-pointer hover:bg-black/30 transition">
-          Lihat Semua Promo
+        <div className="absolute bottom-6 right-5 text-xs font-medium bg-black/20 px-3 py-1.5 rounded-full backdrop-blur-md cursor-pointer hover:bg-black/30 transition hidden">
+          {/* Promo button removed */}
         </div>
       </div>
 
@@ -141,9 +141,9 @@ export default function LandingPage() {
         </div>
       </div>
 
-      {/* Promo & Popular Kos Section */}
+      {/* Popular Kos Section */}
       <div className="px-4 mt-8 md:mt-16 md:max-w-7xl md:mx-auto">
-        <h2 className="text-lg md:text-[22px] font-bold text-slate-800 mb-4">Diskon s.d 50% + Cashback kos impian</h2>
+        <h2 className="text-lg md:text-[22px] font-bold text-slate-800 mb-4">Rekomendasi Kos Populer</h2>
         
         {/* Filter Chips */}
         <div className="flex gap-2 overflow-x-auto pb-4 hide-scrollbar snap-x">

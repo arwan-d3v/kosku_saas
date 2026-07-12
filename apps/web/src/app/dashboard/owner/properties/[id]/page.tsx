@@ -238,73 +238,136 @@ export default function PropertyDetailsPage({ params }: { params: Promise<{ id: 
               <p className="text-slate-400 text-sm mt-1">Klik "Tambah Kamar" untuk mulai menyewakan.</p>
             </div>
           ) : (
-            <table className="w-full text-left border-separate border-spacing-y-4">
-              <thead>
-                <tr className="text-slate-400 font-bold text-sm uppercase tracking-wider">
-                  <th className="pb-2 px-4 whitespace-nowrap">No. Kamar</th>
-                  <th className="pb-2 px-4 whitespace-nowrap">Harga (Bulan)</th>
-                  <th className="pb-2 px-4 whitespace-nowrap">Status</th>
-                  <th className="pb-2 px-4 whitespace-nowrap">Fasilitas</th>
-                  <th className="pb-2 px-4 text-right whitespace-nowrap">Aksi</th>
-                </tr>
-              </thead>
-              <tbody>
+            <>
+              {/* Mobile Card View */}
+              <div className="grid grid-cols-1 gap-4 md:hidden pb-4">
                 {rooms.map((room) => (
-                  <tr key={room.id} className="bg-slate-50/50 hover:bg-slate-50 transition-colors rounded-2xl group">
-                    <td className="py-4 px-4 font-black text-slate-700 rounded-l-2xl">
+                  <div key={room.id} className="bg-slate-50/80 hover:bg-slate-50 border border-slate-200/60 rounded-2xl p-4 transition-colors">
+                    <div className="flex justify-between items-start mb-3">
                       <div className="flex items-center gap-3">
                         {room.images && room.images.length > 0 ? (
-                           <img src={room.images[0]} alt="Kamar" className="w-10 h-10 rounded-lg object-cover" />
+                           <img src={room.images[0]} alt="Kamar" className="w-12 h-12 rounded-xl object-cover shadow-sm" />
                         ) : (
-                           <div className="w-10 h-10 rounded-lg bg-slate-200 flex items-center justify-center text-slate-400">
-                             <Camera size={16} />
+                           <div className="w-12 h-12 rounded-xl bg-white border border-slate-200 flex items-center justify-center text-slate-400 shadow-sm">
+                             <Camera size={18} />
                            </div>
                         )}
-                        {room.room_number}
+                        <div>
+                          <h4 className="font-black text-slate-800 text-lg">{room.room_number}</h4>
+                          <span className={`inline-block px-2.5 py-0.5 mt-0.5 rounded-md text-[10px] font-bold ${room.is_available ? 'bg-emerald-100 text-emerald-600 border border-emerald-200' : 'bg-rose-100 text-rose-600 border border-rose-200'}`}>
+                            {room.is_available ? 'Tersedia' : 'Terisi'}
+                          </span>
+                        </div>
                       </div>
-                    </td>
-                    <td className="py-4 px-4 font-bold text-indigo-600 whitespace-nowrap">{formatRupiah(room.price_per_month)}</td>
-                    <td className="py-4 px-4">
-                      <span className={`px-3 py-1 rounded-full text-xs font-bold ${room.is_available ? 'bg-emerald-100 text-emerald-600 border border-emerald-200' : 'bg-rose-100 text-rose-600 border border-rose-200'}`}>
-                        {room.is_available ? 'Tersedia' : 'Terisi'}
-                      </span>
-                    </td>
-                    <td className="py-4 px-4 text-sm text-slate-500 font-medium">
+                      <div className="text-right">
+                        <p className="font-bold text-indigo-600">{formatRupiah(room.price_per_month)}</p>
+                        <p className="text-[10px] text-slate-400 font-medium">/ bulan</p>
+                      </div>
+                    </div>
+                    
+                    <div className="mb-4">
+                      <p className="text-[10px] font-bold text-slate-400 mb-1.5 uppercase tracking-wider">Fasilitas</p>
                       {room.facilities && room.facilities.length > 0 ? (
-                        <div className="flex flex-wrap gap-1.5">
+                        <div className="flex flex-wrap gap-1">
                           {room.facilities.map((f: string) => (
-                            <span key={f} className="bg-white border border-slate-200 px-2 py-0.5 rounded text-[10px] whitespace-nowrap">
+                            <span key={f} className="bg-white border border-slate-200 px-1.5 py-0.5 rounded text-[9px] font-medium text-slate-600">
                               {f}
                             </span>
                           ))}
                         </div>
                       ) : (
-                        <span className="italic text-slate-400">-</span>
+                        <span className="italic text-slate-400 text-xs">-</span>
                       )}
-                    </td>
-                    <td className="py-4 px-4 text-right rounded-r-2xl">
-                      <div className="flex items-center justify-end gap-2">
-                        <button 
-                          onClick={() => openEditModal(room)}
-                          className="p-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition"
-                          title="Edit Kamar"
-                        >
-                          <Pencil size={18} />
-                        </button>
-                        <button 
-                          onClick={() => handleDeleteRoom(room.id)}
-                          disabled={deletingId === room.id}
-                          className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition disabled:opacity-50"
-                          title="Hapus Kamar"
-                        >
-                          <Trash2 size={18} />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
+                    </div>
+                    
+                    <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-200/50">
+                      <button 
+                        onClick={() => openEditModal(room)}
+                        className="flex-1 py-2 text-xs font-bold text-slate-600 bg-white border border-slate-200 hover:text-indigo-600 hover:border-indigo-200 rounded-xl transition flex items-center justify-center gap-1.5"
+                      >
+                        <Pencil size={14} /> Edit
+                      </button>
+                      <button 
+                        onClick={() => handleDeleteRoom(room.id)}
+                        disabled={deletingId === room.id}
+                        className="flex-1 py-2 text-xs font-bold text-slate-600 bg-white border border-slate-200 hover:text-rose-600 hover:border-rose-200 rounded-xl transition flex items-center justify-center gap-1.5 disabled:opacity-50"
+                      >
+                        <Trash2 size={14} /> Hapus
+                      </button>
+                    </div>
+                  </div>
                 ))}
-              </tbody>
-            </table>
+              </div>
+
+              {/* Desktop Table View */}
+              <table className="w-full text-left border-separate border-spacing-y-4 hidden md:table">
+                <thead>
+                  <tr className="text-slate-400 font-bold text-sm uppercase tracking-wider">
+                    <th className="pb-2 px-4 whitespace-nowrap">No. Kamar</th>
+                    <th className="pb-2 px-4 whitespace-nowrap">Harga (Bulan)</th>
+                    <th className="pb-2 px-4 whitespace-nowrap">Status</th>
+                    <th className="pb-2 px-4 whitespace-nowrap">Fasilitas</th>
+                    <th className="pb-2 px-4 text-right whitespace-nowrap">Aksi</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {rooms.map((room) => (
+                    <tr key={room.id} className="bg-slate-50/50 hover:bg-slate-50 transition-colors rounded-2xl group">
+                      <td className="py-4 px-4 font-black text-slate-700 rounded-l-2xl">
+                        <div className="flex items-center gap-3">
+                          {room.images && room.images.length > 0 ? (
+                             <img src={room.images[0]} alt="Kamar" className="w-10 h-10 rounded-lg object-cover" />
+                          ) : (
+                             <div className="w-10 h-10 rounded-lg bg-slate-200 flex items-center justify-center text-slate-400">
+                               <Camera size={16} />
+                             </div>
+                          )}
+                          {room.room_number}
+                        </div>
+                      </td>
+                      <td className="py-4 px-4 font-bold text-indigo-600 whitespace-nowrap">{formatRupiah(room.price_per_month)}</td>
+                      <td className="py-4 px-4">
+                        <span className={`px-3 py-1 rounded-full text-xs font-bold ${room.is_available ? 'bg-emerald-100 text-emerald-600 border border-emerald-200' : 'bg-rose-100 text-rose-600 border border-rose-200'}`}>
+                          {room.is_available ? 'Tersedia' : 'Terisi'}
+                        </span>
+                      </td>
+                      <td className="py-4 px-4 text-sm text-slate-500 font-medium">
+                        {room.facilities && room.facilities.length > 0 ? (
+                          <div className="flex flex-wrap gap-1.5">
+                            {room.facilities.map((f: string) => (
+                              <span key={f} className="bg-white border border-slate-200 px-2 py-0.5 rounded text-[10px] whitespace-nowrap">
+                                {f}
+                              </span>
+                            ))}
+                          </div>
+                        ) : (
+                          <span className="italic text-slate-400">-</span>
+                        )}
+                      </td>
+                      <td className="py-4 px-4 text-right rounded-r-2xl">
+                        <div className="flex items-center justify-end gap-2">
+                          <button 
+                            onClick={() => openEditModal(room)}
+                            className="p-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition"
+                            title="Edit Kamar"
+                          >
+                            <Pencil size={18} />
+                          </button>
+                          <button 
+                            onClick={() => handleDeleteRoom(room.id)}
+                            disabled={deletingId === room.id}
+                            className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition disabled:opacity-50"
+                            title="Hapus Kamar"
+                          >
+                            <Trash2 size={18} />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </>
           )}
         </div>
       </div>

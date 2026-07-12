@@ -164,76 +164,127 @@ export default function PropertiesPage() {
               Belum ada properti kosan. Klik "Tambah Kosan" untuk mulai.
             </div>
           ) : (
-            <table className="w-full text-left">
-              <thead>
-                <tr className="text-slate-400 font-bold text-xs uppercase tracking-wider border-b border-slate-100">
-                  <th className="pb-4 px-4">Info Properti</th>
-                  <th className="pb-4 px-4">Alamat</th>
-                  <th className="pb-4 px-4 text-center">Total Kamar</th>
-                  <th className="pb-4 px-4 text-right">Aksi</th>
-                </tr>
-              </thead>
-              <tbody>
+            <>
+              {/* Mobile Card View */}
+              <div className="grid grid-cols-1 gap-4 md:hidden">
                 {properties.map((prop) => (
-                  <tr key={prop.id} className="border-b border-slate-50 hover:bg-slate-50/80 transition-colors group">
-                    <td className="py-5 px-4">
-                      <div className="flex items-center gap-3">
-                        {prop.images && prop.images.length > 0 ? (
-                          <div className="w-10 h-10 rounded-xl overflow-hidden shrink-0">
-                            <img src={prop.images[0]} alt="Prop" className="w-full h-full object-cover" />
-                          </div>
-                        ) : (
-                          <div className="w-10 h-10 bg-indigo-50 rounded-xl flex items-center justify-center text-indigo-600 shrink-0">
-                             <Building size={20} />
-                          </div>
-                        )}
-                        <div>
-                          <span className="font-bold text-slate-800 block">{prop.name}</span>
-                          {prop.facilities && prop.facilities.length > 0 && (
-                            <div className="flex flex-wrap gap-1.5 mt-2">
-                              {prop.facilities.slice(0, 3).map((f: string) => (
-                                <span key={f} className="text-[10px] px-2 py-0.5 bg-indigo-50 text-indigo-600 font-medium rounded border border-indigo-100/50">
-                                  {f}
-                                </span>
-                              ))}
-                              {prop.facilities.length > 3 && (
-                                <span className="text-[10px] px-2 py-0.5 bg-slate-50 text-slate-500 font-medium rounded border border-slate-200">
-                                  +{prop.facilities.length - 3}
-                                </span>
-                              )}
-                            </div>
-                          )}
+                  <div key={prop.id} className="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm">
+                    <div className="flex gap-4">
+                      {prop.images && prop.images.length > 0 ? (
+                        <div className="w-16 h-16 rounded-xl overflow-hidden shrink-0">
+                          <img src={prop.images[0]} alt="Prop" className="w-full h-full object-cover" />
                         </div>
+                      ) : (
+                        <div className="w-16 h-16 bg-indigo-50 rounded-xl flex items-center justify-center text-indigo-600 shrink-0">
+                           <Building size={24} />
+                        </div>
+                      )}
+                      <div>
+                        <h4 className="font-bold text-slate-800 text-lg">{prop.name}</h4>
+                        <p className="text-xs text-slate-500 flex items-start gap-1 mt-1">
+                          <MapPin size={14} className="shrink-0 mt-0.5" />
+                          <span className="line-clamp-2">{prop.address}</span>
+                        </p>
                       </div>
-                    </td>
-                    <td className="py-5 px-4 font-medium text-slate-500 max-w-[200px] truncate text-sm flex items-center gap-2 mt-2">
-                      <MapPin size={14} className="text-slate-400 flex-shrink-0" />
-                      {prop.address}
-                    </td>
-                    <td className="py-5 px-4 text-center">
+                    </div>
+                    
+                    <div className="mt-4 pt-4 border-t border-slate-100 flex items-center justify-between">
                       <span className="px-3 py-1 rounded-full text-xs font-bold bg-blue-50 text-blue-600 border border-blue-100">
                         {prop.rooms ? prop.rooms.length : 0} Kamar
                       </span>
-                    </td>
-                    <td className="py-5 px-4">
-                      <div className="flex items-center justify-end gap-2">
+                      
+                      <div className="flex items-center gap-2">
                         <Link href={`/dashboard/owner/properties/${prop.id}`}>
-                           <button className="px-4 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-bold text-slate-600 hover:text-blue-600 hover:border-blue-200 transition">
+                           <button className="px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-bold text-slate-600 hover:text-blue-600 hover:border-blue-200 transition">
                              Kamar
                            </button>
                         </Link>
-                        <button onClick={() => openEditForm(prop)} className="p-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition">
+                        <button onClick={() => openEditForm(prop)} className="p-1.5 text-slate-400 hover:text-indigo-600 bg-slate-50 hover:bg-indigo-50 rounded-lg transition">
                           <Pencil size={16} />
                         </button>
-                        <button onClick={() => handleDelete(prop.id)} className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition">
+                        <button onClick={() => handleDelete(prop.id)} className="p-1.5 text-slate-400 hover:text-red-600 bg-slate-50 hover:bg-red-50 rounded-lg transition">
                           <Trash2 size={16} />
                         </button>
                       </div>
-                    </td>
-                  </tr>
+                    </div>
+                  </div>
                 ))}
-              </tbody>
-            </table>
+              </div>
+
+              {/* Desktop Table View */}
+              <table className="w-full text-left hidden md:table">
+                <thead>
+                  <tr className="text-slate-400 font-bold text-xs uppercase tracking-wider border-b border-slate-100">
+                    <th className="pb-4 px-4">Info Properti</th>
+                    <th className="pb-4 px-4">Alamat</th>
+                    <th className="pb-4 px-4 text-center">Total Kamar</th>
+                    <th className="pb-4 px-4 text-right">Aksi</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {properties.map((prop) => (
+                    <tr key={prop.id} className="border-b border-slate-50 hover:bg-slate-50/80 transition-colors group">
+                      <td className="py-5 px-4">
+                        <div className="flex items-center gap-3">
+                          {prop.images && prop.images.length > 0 ? (
+                            <div className="w-10 h-10 rounded-xl overflow-hidden shrink-0">
+                              <img src={prop.images[0]} alt="Prop" className="w-full h-full object-cover" />
+                            </div>
+                          ) : (
+                            <div className="w-10 h-10 bg-indigo-50 rounded-xl flex items-center justify-center text-indigo-600 shrink-0">
+                               <Building size={20} />
+                            </div>
+                          )}
+                          <div>
+                            <span className="font-bold text-slate-800 block">{prop.name}</span>
+                            {prop.facilities && prop.facilities.length > 0 && (
+                              <div className="flex flex-wrap gap-1.5 mt-2">
+                                {prop.facilities.slice(0, 3).map((f: string) => (
+                                  <span key={f} className="text-[10px] px-2 py-0.5 bg-indigo-50 text-indigo-600 font-medium rounded border border-indigo-100/50">
+                                    {f}
+                                  </span>
+                                ))}
+                                {prop.facilities.length > 3 && (
+                                  <span className="text-[10px] px-2 py-0.5 bg-slate-50 text-slate-500 font-medium rounded border border-slate-200">
+                                    +{prop.facilities.length - 3}
+                                  </span>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </td>
+                      <td className="py-5 px-4 font-medium text-slate-500 max-w-[200px] truncate text-sm">
+                        <div className="flex items-center gap-2 mt-2">
+                          <MapPin size={14} className="text-slate-400 flex-shrink-0" />
+                          {prop.address}
+                        </div>
+                      </td>
+                      <td className="py-5 px-4 text-center">
+                        <span className="px-3 py-1 rounded-full text-xs font-bold bg-blue-50 text-blue-600 border border-blue-100">
+                          {prop.rooms ? prop.rooms.length : 0} Kamar
+                        </span>
+                      </td>
+                      <td className="py-5 px-4">
+                        <div className="flex items-center justify-end gap-2">
+                          <Link href={`/dashboard/owner/properties/${prop.id}`}>
+                             <button className="px-4 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-bold text-slate-600 hover:text-blue-600 hover:border-blue-200 transition">
+                               Kamar
+                             </button>
+                          </Link>
+                          <button onClick={() => openEditForm(prop)} className="p-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition">
+                            <Pencil size={16} />
+                          </button>
+                          <button onClick={() => handleDelete(prop.id)} className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition">
+                            <Trash2 size={16} />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </>
           )}
         </div>
       </div>
@@ -323,8 +374,21 @@ export default function PropertiesPage() {
                       onChange={(e) => setFormData({...formData, address: e.target.value})}
                       placeholder="Masukkan alamat lengkap dengan RT/RW..."
                       rows={3}
-                      className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl outline-none focus:ring-2 ring-blue-500/20 focus:border-blue-500 transition-all font-medium text-slate-700 resize-none placeholder-slate-400"
+                      className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl outline-none focus:ring-2 ring-blue-500/20 focus:border-blue-500 transition-all font-medium text-slate-700 resize-none placeholder-slate-400 mb-2"
                     />
+                    
+                    {formData.address && (
+                      <div className="w-full h-32 rounded-xl overflow-hidden border border-slate-200 shadow-sm relative bg-slate-50 mt-1">
+                        <iframe 
+                          width="100%" 
+                          height="100%" 
+                          frameBorder="0" 
+                          style={{ border: 0 }}
+                          src={`https://maps.google.com/maps?q=${encodeURIComponent(formData.address)}&t=&z=15&ie=UTF8&iwloc=&output=embed`}
+                          allowFullScreen
+                        ></iframe>
+                      </div>
+                    )}
                   </div>
 
                   <div>
