@@ -16,6 +16,28 @@ export default function OwnerLayout({ children }: { children: React.ReactNode })
     { icon: <Settings size={20} />, label: 'Pengaturan', href: '/dashboard/owner/settings' },
   ];
 
+  const [avatar, setAvatar] = React.useState("https://api.dicebear.com/7.x/avataaars/svg?seed=Felix");
+  
+  React.useEffect(() => {
+    import('@/lib/supabase').then(({ supabase }) => {
+      supabase.auth.getSession().then(({ data: { session } }) => {
+        if (session?.user?.user_metadata?.avatar_url) {
+          setAvatar(session.user.user_metadata.avatar_url);
+        }
+      });
+
+      const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
+        if (session?.user?.user_metadata?.avatar_url) {
+          setAvatar(session.user.user_metadata.avatar_url);
+        }
+      });
+
+      return () => {
+        authListener.subscription.unsubscribe();
+      };
+    });
+  }, []);
+
   return (
     <div className="min-h-screen bg-slate-50 flex relative">
       {/* Liquid Glass Sidebar */}
@@ -58,7 +80,7 @@ export default function OwnerLayout({ children }: { children: React.ReactNode })
             <p className="text-sm md:text-base text-slate-500 font-medium">Selamat datang kembali!</p>
           </div>
           <div className="w-10 h-10 md:w-12 md:h-12 shrink-0 rounded-2xl bg-indigo-100 flex items-center justify-center shadow-inner overflow-hidden">
-             <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Felix" alt="avatar" />
+             <img src={avatar} alt="avatar" className="w-full h-full object-cover" />
           </div>
         </header>
         

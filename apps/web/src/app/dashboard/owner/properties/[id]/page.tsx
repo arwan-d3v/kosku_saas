@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeft, Plus, X, MapPin, Pencil, Trash2, Camera, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import { fetchWithAuth } from '@/lib/api-client';
+import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
 
 const ROOM_FACILITIES = [
@@ -102,12 +103,12 @@ export default function PropertyDetailsPage({ params }: { params: Promise<{ id: 
       uploadData.append('file', file);
 
       const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
-      const token = localStorage.getItem('supabase.auth.token'); // Fallback or use standard fetch
+      const { data: { session } } = await supabase.auth.getSession();
       
       const response = await fetch(`${API_BASE_URL}/properties/${propertyId}/rooms/${editingRoomId}/images`, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${JSON.parse(token || '{}')?.currentSession?.access_token || ''}`
+          'Authorization': `Bearer ${session?.access_token}`
         },
         body: uploadData
       });
