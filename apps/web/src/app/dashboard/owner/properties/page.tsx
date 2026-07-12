@@ -1,10 +1,11 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Plus, X, Pencil, Trash2, Building, MapPin } from 'lucide-react';
+import { Plus, X, Pencil, Trash2, Building, MapPin, Camera, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import { fetchWithAuth } from '@/lib/api-client';
+import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
 
 export default function PropertiesPage() {
@@ -15,8 +16,10 @@ export default function PropertiesPage() {
   const [isSlideOverOpen, setIsSlideOverOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   
-  const [formData, setFormData] = useState<{name: string, address: string, description: string, facilities: string[]}>({ name: '', address: '', description: '', facilities: [] });
+  const [formData, setFormData] = useState<{name: string, address: string, description: string, facilities: string[], images: string[]}>({ name: '', address: '', description: '', facilities: [], images: [] });
   const [submitting, setSubmitting] = useState(false);
+  const [uploadingImage, setUploadingImage] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     fetchProperties();
@@ -36,13 +39,19 @@ export default function PropertiesPage() {
 
   const openAddForm = () => {
     setEditingId(null);
-    setFormData({ name: '', address: '', description: '', facilities: [] });
+    setFormData({ name: '', address: '', description: '', facilities: [], images: [] });
     setIsSlideOverOpen(true);
   };
 
   const openEditForm = (property: any) => {
     setEditingId(property.id);
-    setFormData({ name: property.name, address: property.address, description: property.description || '', facilities: property.facilities || [] });
+    setFormData({ 
+      name: property.name, 
+      address: property.address, 
+      description: property.description || '', 
+      facilities: property.facilities || [],
+      images: property.images || []
+    });
     setIsSlideOverOpen(true);
   };
 
@@ -55,6 +64,45 @@ export default function PropertiesPage() {
       fetchProperties();
     } catch (error: any) {
       toast.error(error.message || "Gagal menghapus properti.", { id: 'delete-toast' });
+    }
+  };
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !editingId) return;
+
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('Ukuran maksimal foto 5MB');
+      return;
+    }
+
+    try {
+      setUploadingImage(true);
+      const uploadData = new FormData();
+      uploadData.append('file', file);
+
+      const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      const response = await fetch(`${API_BASE_URL}/properties/${editingId}/images`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${session?.access_token}`
+        },
+        body: uploadData
+      });
+
+      if (!response.ok) throw new Error('Gagal upload gambar');
+      
+      const data = await response.json();
+      setFormData(prev => ({ ...prev, images: [...prev.images, data.url] }));
+      toast.success('Gambar berhasil diunggah!');
+      fetchProperties(); // Refresh to update list
+    } catch (error: any) {
+      toast.error(error.message);
+    } finally {
+      setUploadingImage(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
     }
   };
 
@@ -130,9 +178,15 @@ export default function PropertiesPage() {
                   <tr key={prop.id} className="border-b border-slate-50 hover:bg-slate-50/80 transition-colors group">
                     <td className="py-5 px-4">
                       <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-indigo-50 rounded-xl flex items-center justify-center text-indigo-600">
-                           <Building size={20} />
-                        </div>
+                        {prop.images && prop.images.length > 0 ? (
+                          <div className="w-10 h-10 rounded-xl overflow-hidden shrink-0">
+                            <img src={prop.images[0]} alt="Prop" className="w-full h-full object-cover" />
+                          </div>
+                        ) : (
+                          <div className="w-10 h-10 bg-indigo-50 rounded-xl flex items-center justify-center text-indigo-600 shrink-0">
+                             <Building size={20} />
+                          </div>
+                        )}
                         <div>
                           <span className="font-bold text-slate-800 block">{prop.name}</span>
                           {prop.facilities && prop.facilities.length > 0 && (
@@ -218,6 +272,36 @@ export default function PropertiesPage() {
               </div>
               
               <div className="p-6 flex-1 overflow-y-auto">
+                {editingId && (
+                  <div className="mb-6">
+                    <label className="block text-slate-600 font-bold text-sm mb-3">Foto Properti (Opsional)</label>
+                    <div className="flex gap-3 overflow-x-auto pb-2">
+                      {formData.images.map((img, idx) => (
+                        <div key={idx} className="relative w-24 h-24 flex-shrink-0 rounded-xl overflow-hidden border border-slate-200">
+                          <img src={img} alt="Property" className="w-full h-full object-cover" />
+                        </div>
+                      ))}
+                      <button 
+                        type="button"
+                        onClick={() => fileInputRef.current?.click()}
+                        disabled={uploadingImage}
+                        className="w-24 h-24 flex-shrink-0 rounded-xl border-2 border-dashed border-slate-300 flex flex-col items-center justify-center text-slate-400 hover:bg-slate-50 hover:text-indigo-500 transition-colors cursor-pointer"
+                      >
+                        {uploadingImage ? <Loader2 size={24} className="animate-spin" /> : <Camera size={24} />}
+                        <span className="text-[10px] font-bold mt-1">Tambah Foto</span>
+                      </button>
+                      <input 
+                        type="file" 
+                        className="hidden" 
+                        ref={fileInputRef}
+                        accept="image/*"
+                        onChange={handleImageUpload}
+                      />
+                    </div>
+                    <p className="text-xs text-slate-400 mt-2">Maks. 5MB, format JPG/PNG/WEBP.</p>
+                  </div>
+                )}
+
                 <form id="property-form" onSubmit={handleSubmit} className="space-y-6">
                   <div>
                     <label className="block text-slate-700 font-bold text-sm mb-2">Nama Kosan</label>
@@ -263,17 +347,6 @@ export default function PropertiesPage() {
                           <span className="text-sm font-medium text-slate-600 group-hover:text-slate-800 transition">{facility}</span>
                         </label>
                       ))}
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-slate-700 font-bold text-sm mb-2">Foto / Media Properti</label>
-                    <div className="border-2 border-dashed border-slate-200 rounded-xl p-6 flex flex-col items-center justify-center text-center hover:border-blue-400 hover:bg-blue-50/50 transition cursor-pointer">
-                      <div className="w-12 h-12 bg-blue-50 text-blue-500 rounded-full flex items-center justify-center mb-3">
-                        <Plus size={24} />
-                      </div>
-                      <p className="text-sm font-bold text-slate-700">Unggah Foto Utama</p>
-                      <p className="text-xs font-medium text-slate-500 mt-1">Format JPG/PNG, maks 5MB.</p>
                     </div>
                   </div>
 
