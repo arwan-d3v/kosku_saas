@@ -18,6 +18,8 @@ export const metadata: Metadata = {
   description: "Platform Sewa Kos Paling Sat-set",
 };
 
+import { Toaster } from "sonner";
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -31,6 +33,7 @@ export default function RootLayout({
       <body className="min-h-full flex flex-col">
         {children}
         <BottomNavigation />
+        <Toaster position="top-center" richColors />
       </body>
     </html>
   );

@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Plus, X, Pencil, Trash2, Building, MapPin } from 'lucide-react';
 import Link from 'next/link';
 import { fetchWithAuth } from '@/lib/api-client';
+import { toast } from 'sonner';
 
 export default function PropertiesPage() {
   const [properties, setProperties] = useState<any[]>([]);
@@ -48,17 +49,21 @@ export default function PropertiesPage() {
   const handleDelete = async (id: string) => {
     if (!confirm("Yakin ingin menghapus properti ini? Semua kamar terkait akan terhapus.")) return;
     try {
+      toast.loading('Menghapus properti...', { id: 'delete-toast' });
       await fetchWithAuth(`/properties/${id}`, { method: 'DELETE' });
+      toast.success('Properti berhasil dihapus!', { id: 'delete-toast' });
       fetchProperties();
-    } catch (error) {
-      alert("Gagal menghapus properti.");
+    } catch (error: any) {
+      toast.error(error.message || "Gagal menghapus properti.", { id: 'delete-toast' });
     }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (submitting) return;
     try {
       setSubmitting(true);
+      toast.loading(editingId ? 'Memperbarui properti...' : 'Menyimpan properti baru...', { id: 'submit-toast' });
       if (editingId) {
         await fetchWithAuth(`/properties/${editingId}`, {
           method: 'PATCH',
@@ -70,11 +75,12 @@ export default function PropertiesPage() {
           body: JSON.stringify(formData),
         });
       }
+      toast.success('Properti berhasil disimpan!', { id: 'submit-toast' });
       setIsSlideOverOpen(false);
       fetchProperties();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to save property:', error);
-      alert('Gagal menyimpan kosan. Silakan coba lagi.');
+      toast.error(error.message || 'Gagal menyimpan kosan. Silakan coba lagi.', { id: 'submit-toast' });
     } finally {
       setSubmitting(false);
     }
