@@ -196,7 +196,7 @@ export default function PropertiesPage() {
               </div>
               
               <div className="p-6 flex-1 overflow-y-auto">
-                <form id="property-form" onSubmit={handleSubmit} className="space-y-5">
+                <form id="property-form" onSubmit={handleSubmit} className="space-y-6">
                   <div>
                     <label className="block text-slate-700 font-bold text-sm mb-2">Nama Kosan</label>
                     <input
@@ -222,11 +222,34 @@ export default function PropertiesPage() {
                   </div>
 
                   <div>
-                    <label className="block text-slate-700 font-bold text-sm mb-2">Deskripsi (Opsional)</label>
+                    <label className="block text-slate-700 font-bold text-sm mb-3">Fasilitas Unggulan</label>
+                    <div className="grid grid-cols-2 gap-3">
+                      {['AC', 'Kamar Mandi Dalam', 'Dapur Umum', 'Dapur Pribadi', 'Air PDAM', 'Listrik Token', 'Listrik Termasuk', 'WiFi Gratis', 'Parkir Motor', 'Parkir Mobil', 'Akses 24 Jam', 'CCTV'].map(facility => (
+                        <label key={facility} className="flex items-start gap-2 cursor-pointer group">
+                          <input type="checkbox" className="mt-1 w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500" />
+                          <span className="text-sm font-medium text-slate-600 group-hover:text-slate-800 transition">{facility}</span>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-slate-700 font-bold text-sm mb-2">Foto / Media Properti</label>
+                    <div className="border-2 border-dashed border-slate-200 rounded-xl p-6 flex flex-col items-center justify-center text-center hover:border-blue-400 hover:bg-blue-50/50 transition cursor-pointer">
+                      <div className="w-12 h-12 bg-blue-50 text-blue-500 rounded-full flex items-center justify-center mb-3">
+                        <Plus size={24} />
+                      </div>
+                      <p className="text-sm font-bold text-slate-700">Unggah Foto Utama</p>
+                      <p className="text-xs font-medium text-slate-500 mt-1">Format JPG/PNG, maks 5MB.</p>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-slate-700 font-bold text-sm mb-2">Deskripsi Lengkap (Opsional)</label>
                     <textarea
                       value={formData.description}
                       onChange={(e) => setFormData({...formData, description: e.target.value})}
-                      placeholder="Fasilitas umum: WiFi, Parkir luas, dll..."
+                      placeholder="Ceritakan mengapa kosan Anda menarik..."
                       rows={4}
                       className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl outline-none focus:ring-2 ring-blue-500/20 focus:border-blue-500 transition-all font-medium text-slate-700 resize-none placeholder-slate-400"
                     />
@@ -234,7 +257,7 @@ export default function PropertiesPage() {
                 </form>
               </div>
 
-              <div className="p-6 border-t border-slate-100 bg-slate-50">
+              <div className="p-6 pb-24 md:pb-6 border-t border-slate-100 bg-slate-50">
                 <div className="flex gap-3">
                    <button
                      type="button"
