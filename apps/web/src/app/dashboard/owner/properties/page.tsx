@@ -158,7 +158,7 @@ export default function PropertiesPage() {
                     </td>
                     <td className="py-5 px-4 text-center">
                       <span className="px-3 py-1 rounded-full text-xs font-bold bg-blue-50 text-blue-600 border border-blue-100">
-                        0 Kamar
+                        {prop.rooms ? prop.rooms.length : 0} Kamar
                       </span>
                     </td>
                     <td className="py-5 px-4">

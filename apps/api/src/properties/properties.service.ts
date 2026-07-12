@@ -33,7 +33,7 @@ export class PropertiesService {
 
     const { data: properties, error } = await supabase
       .from('properties')
-      .select('*')
+      .select('*, rooms(*)')
       .eq('owner_id', userId);
 
     if (error) {
