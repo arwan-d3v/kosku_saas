@@ -96,9 +96,7 @@ export default function PublicPropertyDetails({ params }: { params: { id: string
     ? Math.min(...roomsAvailable.map((r: any) => Number(r.price_per_month))) 
     : 0;
 
-  const lowestPrice = roomsAvailable.length > 0 
-    ? Math.min(...roomsAvailable.map((r: any) => Number(r.price_per_month))) 
-    : 0;
+
 
   // Colors for icons dynamically assigned based on index
   const bgColors = ["bg-blue-50", "bg-cyan-50", "bg-indigo-50", "bg-emerald-50", "bg-amber-50"];
