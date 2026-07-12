@@ -5,7 +5,7 @@ import { SupabaseService } from '../common/supabase/supabase.service';
 export class RoomsService {
   constructor(private readonly supabaseService: SupabaseService) {}
 
-  async createRoom(userId: string, propertyId: string, data: { room_number: string; price_per_month: number; status?: boolean; facilities?: string[] }) {
+  async createRoom(userId: string, propertyId: string, data: { room_number: string; price_per_month: number; status?: boolean; facilities?: string[]; images?: string[] }) {
     const supabase = this.supabaseService.getClient();
 
     // 1. Verify property ownership
@@ -32,6 +32,7 @@ export class RoomsService {
         price_per_month: data.price_per_month,
         is_available: data.status !== undefined ? data.status : true,
         facilities: data.facilities || [],
+        images: data.images || []
       })
       .select()
       .single();
@@ -58,7 +59,7 @@ export class RoomsService {
     return rooms;
   }
 
-  async updateRoom(roomId: string, propertyId: string, userId: string, data: { room_number?: string; price_per_month?: number; status?: boolean; facilities?: string[] }) {
+  async updateRoom(roomId: string, propertyId: string, userId: string, data: { room_number?: string; price_per_month?: number; status?: boolean; facilities?: string[]; images?: string[] }) {
     const supabase = this.supabaseService.getClient();
 
     // Verify property ownership
@@ -81,6 +82,7 @@ export class RoomsService {
     if (data.price_per_month !== undefined) updates.price_per_month = data.price_per_month;
     if (data.status !== undefined) updates.is_available = data.status;
     if (data.facilities !== undefined) updates.facilities = data.facilities;
+    if (data.images !== undefined) updates.images = data.images;
 
     const { data: room, error: roomError } = await supabase
       .from('rooms')
@@ -126,5 +128,53 @@ export class RoomsService {
     }
 
     return { success: true, message: 'Room deleted successfully' };
+  }
+
+  async uploadRoomImage(userId: string, propertyId: string, roomId: string, file: Express.Multer.File) {
+    const supabase = this.supabaseService.getClient();
+
+    // Verify property ownership
+    const { data: property, error: propError } = await supabase
+      .from('properties')
+      .select('owner_id')
+      .eq('id', propertyId)
+      .single();
+
+    if (propError || !property) {
+      throw new NotFoundException('Property not found');
+    }
+
+    if (property.owner_id !== userId) {
+      throw new UnauthorizedException('You are not authorized');
+    }
+
+    // Verify room
+    const { data: room, error: roomError } = await supabase
+      .from('rooms')
+      .select('images')
+      .eq('id', roomId)
+      .eq('property_id', propertyId)
+      .single();
+
+    if (roomError || !room) {
+      throw new NotFoundException('Room not found');
+    }
+
+    // Upload to Supabase Storage
+    const fileName = `${roomId}/${Date.now()}-${file.originalname.replace(/\s+/g, '_')}`;
+    const publicUrl = await this.supabaseService.uploadFile('room_images', fileName, file);
+
+    // Update room images array
+    const currentImages = room.images || [];
+    const { error: updateError } = await supabase
+      .from('rooms')
+      .update({ images: [...currentImages, publicUrl] })
+      .eq('id', roomId);
+
+    if (updateError) {
+      throw new InternalServerErrorException('Failed to update room images');
+    }
+
+    return { url: publicUrl };
   }
 }

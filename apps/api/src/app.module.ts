@@ -8,6 +8,7 @@ import { RoomsModule } from './rooms/rooms.module';
 import { BookingsModule } from './bookings/bookings.module';
 import { PaymentModule } from './payment/payment.module';
 import { SupabaseModule } from './common/supabase/supabase.module';
+import { UsersModule } from './users/users.module';
 
 @Module({
   imports: [
@@ -17,7 +18,8 @@ import { SupabaseModule } from './common/supabase/supabase.module';
     PropertiesModule,
     RoomsModule,
     BookingsModule,
-    PaymentModule
+    PaymentModule,
+    UsersModule
   ],
   controllers: [AppController],
   providers: [AppService],

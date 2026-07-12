@@ -1,8 +1,8 @@
 "use client";
 
-import React, { useState, useEffect, use } from 'react';
+import React, { useState, useEffect, use, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, Plus, X, MapPin, Pencil, Trash2 } from 'lucide-react';
+import { ArrowLeft, Plus, X, MapPin, Pencil, Trash2, Camera, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import { fetchWithAuth } from '@/lib/api-client';
 import { toast } from 'sonner';
@@ -27,10 +27,13 @@ export default function PropertyDetailsPage({ params }: { params: Promise<{ id: 
     room_number: '', 
     price_per_month: '', 
     status: true,
-    facilities: [] as string[]
+    facilities: [] as string[],
+    images: [] as string[]
   });
   const [submitting, setSubmitting] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [uploadingImage, setUploadingImage] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     fetchData();
@@ -56,7 +59,7 @@ export default function PropertyDetailsPage({ params }: { params: Promise<{ id: 
   const openAddModal = () => {
     setEditMode(false);
     setEditingRoomId(null);
-    setFormData({ room_number: '', price_per_month: '', status: true, facilities: [] });
+    setFormData({ room_number: '', price_per_month: '', status: true, facilities: [], images: [] });
     setIsModalOpen(true);
   };
 
@@ -67,7 +70,8 @@ export default function PropertyDetailsPage({ params }: { params: Promise<{ id: 
       room_number: room.room_number,
       price_per_month: room.price_per_month.toString(),
       status: room.is_available,
-      facilities: room.facilities || []
+      facilities: room.facilities || [],
+      images: room.images || []
     });
     setIsModalOpen(true);
   };
@@ -83,6 +87,45 @@ export default function PropertyDetailsPage({ params }: { params: Promise<{ id: 
     });
   };
 
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !editingRoomId) return;
+
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('Ukuran maksimal foto 5MB');
+      return;
+    }
+
+    try {
+      setUploadingImage(true);
+      const uploadData = new FormData();
+      uploadData.append('file', file);
+
+      const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
+      const token = localStorage.getItem('supabase.auth.token'); // Fallback or use standard fetch
+      
+      const response = await fetch(`${API_BASE_URL}/properties/${propertyId}/rooms/${editingRoomId}/images`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${JSON.parse(token || '{}')?.currentSession?.access_token || ''}`
+        },
+        body: uploadData
+      });
+
+      if (!response.ok) throw new Error('Gagal upload gambar');
+      
+      const data = await response.json();
+      setFormData(prev => ({ ...prev, images: [...prev.images, data.url] }));
+      toast.success('Gambar berhasil diunggah!');
+      fetchData(); // Refresh to update list
+    } catch (error: any) {
+      toast.error(error.message);
+    } finally {
+      setUploadingImage(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
+  };
+
   const handleAddOrEditRoom = async (e: React.FormEvent) => {
     e.preventDefault();
     if (submitting) return;
@@ -95,7 +138,8 @@ export default function PropertyDetailsPage({ params }: { params: Promise<{ id: 
         room_number: formData.room_number,
         price_per_month: parseInt(formData.price_per_month.replace(/\D/g, '') || '0', 10),
         status: formData.status,
-        facilities: formData.facilities
+        facilities: formData.facilities,
+        images: formData.images
       };
 
       if (editMode && editingRoomId) {
@@ -109,7 +153,7 @@ export default function PropertyDetailsPage({ params }: { params: Promise<{ id: 
           method: 'POST',
           body: JSON.stringify(payload),
         });
-        toast.success('Kamar baru berhasil ditambahkan!', { id: 'room-submit' });
+        toast.success('Kamar baru berhasil ditambahkan! Silakan edit untuk menambah foto.', { id: 'room-submit' });
       }
       
       setIsModalOpen(false);
@@ -206,7 +250,18 @@ export default function PropertyDetailsPage({ params }: { params: Promise<{ id: 
               <tbody>
                 {rooms.map((room) => (
                   <tr key={room.id} className="bg-slate-50/50 hover:bg-slate-50 transition-colors rounded-2xl group">
-                    <td className="py-4 px-4 font-black text-slate-700 rounded-l-2xl">{room.room_number}</td>
+                    <td className="py-4 px-4 font-black text-slate-700 rounded-l-2xl">
+                      <div className="flex items-center gap-3">
+                        {room.images && room.images.length > 0 ? (
+                           <img src={room.images[0]} alt="Kamar" className="w-10 h-10 rounded-lg object-cover" />
+                        ) : (
+                           <div className="w-10 h-10 rounded-lg bg-slate-200 flex items-center justify-center text-slate-400">
+                             <Camera size={16} />
+                           </div>
+                        )}
+                        {room.room_number}
+                      </div>
+                    </td>
                     <td className="py-4 px-4 font-bold text-indigo-600 whitespace-nowrap">{formatRupiah(room.price_per_month)}</td>
                     <td className="py-4 px-4">
                       <span className={`px-3 py-1 rounded-full text-xs font-bold ${room.is_available ? 'bg-emerald-100 text-emerald-600 border border-emerald-200' : 'bg-rose-100 text-rose-600 border border-rose-200'}`}>
@@ -272,6 +327,35 @@ export default function PropertyDetailsPage({ params }: { params: Promise<{ id: 
               
               <h2 className="text-2xl font-black text-slate-800 mb-6">{editMode ? 'Edit Kamar' : 'Tambah Kamar Baru'}</h2>
               
+              {editMode && (
+                <div className="mb-6">
+                  <label className="block text-slate-600 font-bold text-sm mb-3">Foto Kamar (Opsional)</label>
+                  <div className="flex gap-3 overflow-x-auto pb-2">
+                    {formData.images.map((img, idx) => (
+                      <div key={idx} className="relative w-24 h-24 flex-shrink-0 rounded-xl overflow-hidden border border-slate-200">
+                        <img src={img} alt="Room" className="w-full h-full object-cover" />
+                      </div>
+                    ))}
+                    <button 
+                      type="button"
+                      onClick={() => fileInputRef.current?.click()}
+                      disabled={uploadingImage}
+                      className="w-24 h-24 flex-shrink-0 rounded-xl border-2 border-dashed border-slate-300 flex flex-col items-center justify-center text-slate-400 hover:bg-slate-50 hover:text-indigo-500 transition-colors cursor-pointer"
+                    >
+                      {uploadingImage ? <Loader2 size={24} className="animate-spin" /> : <Camera size={24} />}
+                      <span className="text-[10px] font-bold mt-1">Tambah Foto</span>
+                    </button>
+                    <input 
+                      type="file" 
+                      className="hidden" 
+                      ref={fileInputRef}
+                      accept="image/*"
+                      onChange={handleImageUpload}
+                    />
+                  </div>
+                </div>
+              )}
+
               <form onSubmit={handleAddOrEditRoom} className="space-y-5">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                   <div>
