@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, use } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   ChevronLeft, 
@@ -20,7 +20,8 @@ import { supabase } from '@/lib/supabase';
 import { fetchWithAuth } from '@/lib/api-client';
 import { getFacilityIcon } from '../../search/page';
 
-export default function PublicPropertyDetails({ params }: { params: { id: string } }) {
+export default function PublicPropertyDetails({ params }: { params: Promise<{ id: string }> }) {
+  const { id: propertyId } = use(params);
   const [isLiked, setIsLiked] = useState(false);
   const [property, setProperty] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -54,7 +55,7 @@ export default function PublicPropertyDetails({ params }: { params: { id: string
     const fetchProperty = async () => {
       try {
         const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
-        const response = await fetch(`${API_BASE_URL}/public/properties/${params.id}`);
+        const response = await fetch(`${API_BASE_URL}/public/properties/${propertyId}`);
         if (!response.ok) throw new Error('Failed to fetch property');
         const data = await response.json();
         setProperty(data);
@@ -71,7 +72,7 @@ export default function PublicPropertyDetails({ params }: { params: { id: string
       }
     };
     fetchProperty();
-  }, [params.id]);
+  }, [propertyId]);
 
   const formatRupiah = (number: number) => {
     return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(number);

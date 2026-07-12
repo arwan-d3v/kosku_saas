@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, use } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeft, Plus, X, MapPin, Pencil, Trash2 } from 'lucide-react';
 import Link from 'next/link';
@@ -12,8 +12,8 @@ const ROOM_FACILITIES = [
   'TV', 'Kasur', 'Lemari', 'Meja Belajar', 'WiFi Khusus', 'Water Heater'
 ];
 
-export default function PropertyDetailsPage({ params }: { params: { id: string } }) {
-  const propertyId = params.id;
+export default function PropertyDetailsPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id: propertyId } = use(params);
   
   const [property, setProperty] = useState<any>(null);
   const [rooms, setRooms] = useState<any[]>([]);
