@@ -51,13 +51,13 @@ export default function OwnerLayout({ children }: { children: React.ReactNode })
       </aside>
 
       {/* Main Content Area */}
-      <main className="flex-1 lg:ml-72 p-8 relative z-0">
-        <header className="flex justify-between items-center mb-10">
+      <main className="flex-1 lg:ml-72 p-4 md:p-8 pb-24 md:pb-8 relative z-0 w-full overflow-x-hidden">
+        <header className="flex justify-between items-center mb-6 md:mb-10 gap-4">
           <div>
-            <h2 className="text-3xl font-black text-slate-800">Dashboard Pemilik</h2>
-            <p className="text-slate-500 font-medium">Selamat datang kembali, Pak Juragan!</p>
+            <h2 className="text-2xl md:text-3xl font-black text-slate-800">Dashboard Pemilik</h2>
+            <p className="text-sm md:text-base text-slate-500 font-medium">Selamat datang kembali!</p>
           </div>
-          <div className="w-12 h-12 rounded-2xl bg-indigo-100 flex items-center justify-center shadow-inner overflow-hidden">
+          <div className="w-10 h-10 md:w-12 md:h-12 shrink-0 rounded-2xl bg-indigo-100 flex items-center justify-center shadow-inner overflow-hidden">
              <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Felix" alt="avatar" />
           </div>
         </header>

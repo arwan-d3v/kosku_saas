@@ -82,11 +82,11 @@ export default function PropertiesPage() {
 
   return (
     <div>
-      <div className="bg-white rounded-3xl p-8 border border-slate-100 shadow-[0_2px_10px_rgba(0,0,0,0.04)]">
-        <div className="flex items-center justify-between mb-8">
+      <div className="bg-white rounded-3xl p-4 md:p-8 border border-slate-100 shadow-[0_2px_10px_rgba(0,0,0,0.04)]">
+        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-8">
           <div>
-            <h3 className="text-xl font-black text-slate-800">Daftar Properti Kosan</h3>
-            <p className="text-sm text-slate-500 font-medium">Kelola semua properti dan gedung kos Anda.</p>
+            <h3 className="text-lg md:text-xl font-black text-slate-800">Daftar Properti Kosan</h3>
+            <p className="text-xs md:text-sm text-slate-500 font-medium">Kelola semua properti dan gedung kos Anda.</p>
           </div>
           <motion.button 
             whileHover={{ scale: 1.05 }}
