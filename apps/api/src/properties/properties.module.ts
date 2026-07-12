@@ -8,6 +8,6 @@ import { SupabaseModule } from '../common/supabase/supabase.module';
   imports: [SupabaseModule],
   controllers: [PropertiesController, PublicController],
   providers: [PropertiesService],
-  exports: [PropertiesService]
+  exports: [PropertiesService],
 })
 export class PropertiesModule {}

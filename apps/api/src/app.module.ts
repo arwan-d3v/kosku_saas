@@ -19,7 +19,7 @@ import { UsersModule } from './users/users.module';
     RoomsModule,
     BookingsModule,
     PaymentModule,
-    UsersModule
+    UsersModule,
   ],
   controllers: [AppController],
   providers: [AppService],

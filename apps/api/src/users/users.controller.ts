@@ -1,4 +1,14 @@
-import { Controller, Get, Patch, Post, Body, Req, UseGuards, UseInterceptors, UploadedFile } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Patch,
+  Post,
+  Body,
+  Req,
+  UseGuards,
+  UseInterceptors,
+  UploadedFile,
+} from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { UsersService } from './users.service';
 import { SupabaseAuthGuard } from '../auth/supabase-auth.guard';
@@ -14,7 +24,10 @@ export class UsersController {
   }
 
   @Patch('me')
-  async updateProfile(@Req() request: any, @Body() body: { full_name?: string }) {
+  async updateProfile(
+    @Req() request: any,
+    @Body() body: { full_name?: string },
+  ) {
     return this.usersService.updateProfile(request.user.id, body);
   }
 
