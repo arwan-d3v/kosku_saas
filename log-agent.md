@@ -18,3 +18,35 @@
 | Antigravity (Fullstack Engineer) | 2026-07-12 08:52:00 UTC | Redesigned UI/UX for Landing Page & Bottom Navigation optimized for mobile view (Tiket.com style). Zero error CI/CD ready. | - | Siap untuk deployment ulang |
 | Antigravity (Fullstack Engineer) | 2026-07-12 10:32:00 UTC | Redesigned Owner Dashboard Analytics (Recharts), implemented Slide-Over SPA Panel for Properties CRUD, and created Tenant Management page. | - | Siap untuk deployment ulang |
 | Antigravity (Fullstack Engineer) | 2026-07-12 10:44:00 UTC | Created comprehensive UAT testing guide (guide-mitra-test.md) for Mitra Dashboard features. | - | Handover for testing |
+
+## Update: 2026-07-12T15:49:45.092Z
+- **Editing Agent**: Jules
+- **Changes Made**:
+  - Added Supabase migrations for `allow_dp_10`, `allow_dp_25` (rooms) and `payment_type`, `dp_amount`, `dp_expires_at` (bookings).
+  - Updated NestJS backend (`bookings.service.ts`, `rooms.service.ts`) to handle early bird (DP 10%) and secure booking (DP 25%) logic with expiry dates.
+  - Refactored frontend property details page: made address an interactive Google Maps link, added auth gate for facilities and booking, added DP payment options to the booking modal.
+  - Added "Lanjutkan dengan Google" OAuth buttons to `login` and `register` pages.
+  - Refactored `/dashboard/owner/properties/page.tsx` for mobile view by introducing a responsive layout (hidden table on mobile, cards on mobile).
+  - Added DP payment tracking and countdown timer to the tenant dashboard.
+- **Scan for Next Needs**:
+  - Verify Midtrans integration with the new DP flows (currently simulated).
+  - Add Cron job or background task on the backend to automatically cancel bookings if `dp_expires_at` is passed and status is still `PENDING`.
+- **Priority Recommendations**:
+  - Test Google Auth redirection and callback logic in staging.
+  - Setup background task for expired DP bookings.
+
+## Update: 2026-07-12T15:53:31.165Z
+- **Editing Agent**: Jules
+- **Changes Made**:
+  - Added Supabase migrations for `allow_dp_10`, `allow_dp_25` (rooms) and `payment_type`, `dp_amount`, `dp_expires_at` (bookings).
+  - Updated NestJS backend (`bookings.service.ts`, `rooms.service.ts`) to handle early bird (DP 10%) and secure booking (DP 25%) logic with expiry dates.
+  - Refactored frontend property details page: made address an interactive Google Maps link, added auth gate for facilities and booking, added DP payment options to the booking modal.
+  - Added "Lanjutkan dengan Google" OAuth buttons to `login` and `register` pages.
+  - Refactored `/dashboard/owner/properties/page.tsx` for mobile view by introducing a responsive layout (hidden table on mobile, cards on mobile).
+  - Added DP payment tracking and countdown timer to the tenant dashboard.
+- **Scan for Next Needs**:
+  - Verify Midtrans integration with the new DP flows (currently simulated).
+  - Add Cron job or background task on the backend to automatically cancel bookings if `dp_expires_at` is passed and status is still `PENDING`.
+- **Priority Recommendations**:
+  - Test Google Auth redirection and callback logic in staging.
+  - Setup background task for expired DP bookings.

@@ -5,7 +5,7 @@ import { SupabaseService } from '../common/supabase/supabase.service';
 export class RoomsService {
   constructor(private readonly supabaseService: SupabaseService) {}
 
-  async createRoom(userId: string, propertyId: string, data: { room_number: string; price_per_month: number; status?: boolean; facilities?: string[]; images?: string[] }) {
+  async createRoom(userId: string, propertyId: string, data: { room_number: string; price_per_month: number; status?: boolean; facilities?: string[]; images?: string[]; allow_dp_10?: boolean; allow_dp_25?: boolean }) {
     const supabase = this.supabaseService.getClient();
 
     // 1. Verify property ownership
@@ -32,7 +32,9 @@ export class RoomsService {
         price_per_month: data.price_per_month,
         is_available: data.status !== undefined ? data.status : true,
         facilities: data.facilities || [],
-        images: data.images || []
+        images: data.images || [],
+        allow_dp_10: data.allow_dp_10 || false,
+        allow_dp_25: data.allow_dp_25 || false
       })
       .select()
       .single();
@@ -59,7 +61,7 @@ export class RoomsService {
     return rooms;
   }
 
-  async updateRoom(roomId: string, propertyId: string, userId: string, data: { room_number?: string; price_per_month?: number; status?: boolean; facilities?: string[]; images?: string[] }) {
+  async updateRoom(roomId: string, propertyId: string, userId: string, data: { room_number?: string; price_per_month?: number; status?: boolean; facilities?: string[]; images?: string[]; allow_dp_10?: boolean; allow_dp_25?: boolean }) {
     const supabase = this.supabaseService.getClient();
 
     // Verify property ownership
@@ -83,6 +85,8 @@ export class RoomsService {
     if (data.status !== undefined) updates.is_available = data.status;
     if (data.facilities !== undefined) updates.facilities = data.facilities;
     if (data.images !== undefined) updates.images = data.images;
+    if (data.allow_dp_10 !== undefined) updates.allow_dp_10 = data.allow_dp_10;
+    if (data.allow_dp_25 !== undefined) updates.allow_dp_25 = data.allow_dp_25;
 
     const { data: room, error: roomError } = await supabase
       .from('rooms')

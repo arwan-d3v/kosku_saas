@@ -5,7 +5,7 @@ import { SupabaseService } from '../common/supabase/supabase.service';
 export class BookingsService {
   constructor(private readonly supabaseService: SupabaseService) {}
 
-  async createBooking(userId: string, roomId: string, startDate: string, endDate?: string) {
+  async createBooking(userId: string, roomId: string, startDate: string, endDate?: string, paymentType: 'FULL' | 'DP_10' | 'DP_25' = 'FULL') {
     const supabase = this.supabaseService.getClient();
 
     // 1. Get room details and verify availability
@@ -38,6 +38,23 @@ export class BookingsService {
       totalPrice = pricePerMonth * months;
     }
 
+    let dpAmount: number | null = null;
+    let dpExpiresAt: string | null = null;
+
+    if (paymentType === 'DP_10') {
+      if (!room.allow_dp_10) throw new BadRequestException('Kamar ini tidak menerima DP 10%');
+      dpAmount = totalPrice * 0.10;
+      const expireDate = new Date();
+      expireDate.setHours(expireDate.getHours() + 24);
+      dpExpiresAt = expireDate.toISOString();
+    } else if (paymentType === 'DP_25') {
+      if (!room.allow_dp_25) throw new BadRequestException('Kamar ini tidak menerima DP 25%');
+      dpAmount = totalPrice * 0.25;
+      const expireDate = new Date();
+      expireDate.setDate(expireDate.getDate() + 7);
+      dpExpiresAt = expireDate.toISOString();
+    }
+
     // 3. Create booking record
     const { data: booking, error: bookingError } = await supabase
       .from('bookings')
@@ -47,7 +64,10 @@ export class BookingsService {
         start_date: startDate,
         end_date: endDate || null,
         total_price: totalPrice,
-        status: 'PENDING'
+        status: 'PENDING',
+        payment_type: paymentType,
+        dp_amount: dpAmount,
+        dp_expires_at: dpExpiresAt
       })
       .select('*, rooms(*, properties(*))')
       .single();

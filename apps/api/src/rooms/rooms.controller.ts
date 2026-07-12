@@ -12,7 +12,7 @@ export class RoomsController {
   async createRoom(
     @Req() request: any,
     @Param('propertyId') propertyId: string,
-    @Body() body: { room_number: string; price_per_month: number; status?: boolean; facilities?: string[]; images?: string[] }
+    @Body() body: { room_number: string; price_per_month: number; status?: boolean; facilities?: string[]; images?: string[]; allow_dp_10?: boolean; allow_dp_25?: boolean }
   ) {
     const userId = request.user.id;
     return this.roomsService.createRoom(userId, propertyId, body);
@@ -28,7 +28,7 @@ export class RoomsController {
     @Req() request: any,
     @Param('propertyId') propertyId: string,
     @Param('roomId') roomId: string,
-    @Body() body: { room_number?: string; price_per_month?: number; status?: boolean; facilities?: string[]; images?: string[] }
+    @Body() body: { room_number?: string; price_per_month?: number; status?: boolean; facilities?: string[]; images?: string[]; allow_dp_10?: boolean; allow_dp_25?: boolean }
   ) {
     const userId = request.user.id;
     return this.roomsService.updateRoom(roomId, propertyId, userId, body);
