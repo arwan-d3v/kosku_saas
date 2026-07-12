@@ -1,0 +1,14 @@
+{
+  "name": "kosan-saas-monorepo",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": [
+    "apps/*"
+  ],
+  "scripts": {
+    "web:dev": "npm run dev -w web",
+    "web:build": "npm run build -w web",
+    "api:dev": "npm run start:dev -w api",
+    "api:build": "npm run build -w api"
+  }
+}
