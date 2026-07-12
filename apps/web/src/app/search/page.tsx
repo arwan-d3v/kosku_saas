@@ -2,8 +2,26 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { MapPin, Star, Wifi, Coffee, Wind, Search, ArrowLeft } from 'lucide-react';
+import { MapPin, Star, Wifi, Wind, Search, ArrowLeft, Droplet, Zap, Key, Video, Bike, CarFront, Bath, Utensils } from 'lucide-react';
 import Link from 'next/link';
+
+export const getFacilityIcon = (facility: string, size = 16) => {
+  switch (facility) {
+    case 'AC': return <Wind size={size} />;
+    case 'Kamar Mandi Dalam': return <Bath size={size} />;
+    case 'Dapur Umum':
+    case 'Dapur Pribadi': return <Utensils size={size} />;
+    case 'Air PDAM': return <Droplet size={size} />;
+    case 'Listrik Token':
+    case 'Listrik Termasuk': return <Zap size={size} />;
+    case 'WiFi Gratis': return <Wifi size={size} />;
+    case 'Parkir Motor': return <Bike size={size} />;
+    case 'Parkir Mobil': return <CarFront size={size} />;
+    case 'Akses 24 Jam': return <Key size={size} />;
+    case 'CCTV': return <Video size={size} />;
+    default: return <Star size={size} />;
+  }
+};
 
 export default function SearchPage() {
   const [properties, setProperties] = useState<any[]>([]);
@@ -159,10 +177,15 @@ export default function SearchPage() {
                       
                       <h3 className="text-lg font-black text-slate-800 mb-4 line-clamp-1">{prop.name}</h3>
 
-                      <div className="flex gap-4 mb-6">
-                        <div className="w-8 h-8 rounded-lg bg-slate-50 flex items-center justify-center text-slate-400"><Wifi size={16} /></div>
-                        <div className="w-8 h-8 rounded-lg bg-slate-50 flex items-center justify-center text-slate-400"><Coffee size={16} /></div>
-                        <div className="w-8 h-8 rounded-lg bg-slate-50 flex items-center justify-center text-slate-400"><Wind size={16} /></div>
+                      <div className="flex flex-wrap gap-2 mb-6 min-h-[32px]">
+                        {prop.facilities && prop.facilities.slice(0, 3).map((f: string) => (
+                          <div key={f} className="w-8 h-8 rounded-lg bg-slate-50 flex items-center justify-center text-slate-400 group relative">
+                            {getFacilityIcon(f, 16)}
+                            <div className="absolute -top-8 bg-slate-800 text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
+                              {f}
+                            </div>
+                          </div>
+                        ))}
                       </div>
 
                       {/* Footer Info */}

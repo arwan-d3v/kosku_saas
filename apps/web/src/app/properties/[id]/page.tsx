@@ -7,22 +7,18 @@ import {
   Star, 
   ShieldCheck, 
   MapPin, 
-  Wifi, 
-  Wind, 
-  Bed, 
-  Bath, 
-  Share2, 
   Heart,
+  Share2,
   Calendar,
   X,
   CreditCard,
-  CheckCircle,
-  Building
+  CheckCircle
 } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { fetchWithAuth } from '@/lib/api-client';
+import { getFacilityIcon } from '../../search/page';
 
 export default function PublicPropertyDetails({ params }: { params: { id: string } }) {
   const [isLiked, setIsLiked] = useState(false);
@@ -100,11 +96,13 @@ export default function PublicPropertyDetails({ params }: { params: { id: string
     ? Math.min(...roomsAvailable.map((r: any) => Number(r.price_per_month))) 
     : 0;
 
-  const facilities = [
-    { name: "Super WiFi", icon: <Wifi size={20} />, color: "text-blue-500", bg: "bg-blue-50" },
-    { name: "AC Dingin", icon: <Wind size={20} />, color: "text-cyan-500", bg: "bg-cyan-50" },
-    { name: "Kasur Empuk", icon: <Bed size={20} />, color: "text-indigo-500", bg: "bg-indigo-50" },
-  ];
+  const lowestPrice = roomsAvailable.length > 0 
+    ? Math.min(...roomsAvailable.map((r: any) => Number(r.price_per_month))) 
+    : 0;
+
+  // Colors for icons dynamically assigned based on index
+  const bgColors = ["bg-blue-50", "bg-cyan-50", "bg-indigo-50", "bg-emerald-50", "bg-amber-50"];
+  const textColors = ["text-blue-500", "text-cyan-500", "text-indigo-500", "text-emerald-500", "text-amber-500"];
 
   const handleBookingInit = () => {
     if (!isAuthenticated) {
@@ -290,17 +288,21 @@ export default function PublicPropertyDetails({ params }: { params: { id: string
       <div className="px-6 py-2">
         <h3 className="text-lg font-black text-slate-800 mb-4">Fasilitas Unggulan</h3>
         <div className="flex gap-4 overflow-x-auto pb-2 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
-          {facilities.map((fas, idx) => (
-            <div 
-              key={idx} 
-              className="flex-shrink-0 flex flex-col items-center justify-center w-24 h-24 bg-white border border-slate-100 rounded-2xl shadow-sm"
-            >
-              <div className={`w-10 h-10 ${fas.bg} ${fas.color} rounded-full flex items-center justify-center mb-2`}>
-                {fas.icon}
+          {property.facilities && property.facilities.length > 0 ? (
+            property.facilities.map((fas: string, idx: number) => (
+              <div 
+                key={idx} 
+                className="flex-shrink-0 flex flex-col items-center justify-center w-24 h-24 bg-white border border-slate-100 rounded-2xl shadow-sm hover:shadow-md transition-shadow"
+              >
+                <div className={`w-10 h-10 ${bgColors[idx % bgColors.length]} ${textColors[idx % textColors.length]} rounded-full flex items-center justify-center mb-2`}>
+                  {getFacilityIcon(fas, 20)}
+                </div>
+                <span className="text-[10px] font-bold text-slate-600 text-center px-1 leading-tight">{fas}</span>
               </div>
-              <span className="text-[10px] font-bold text-slate-600 text-center px-1 leading-tight">{fas.name}</span>
-            </div>
-          ))}
+            ))
+          ) : (
+            <p className="text-sm font-medium text-slate-400 italic">Belum ada data fasilitas</p>
+          )}
         </div>
       </div>
 
