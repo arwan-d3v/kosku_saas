@@ -19,16 +19,19 @@ export default function LandingPage() {
             <Link href="#" className="hover:text-indigo-600 transition-colors">Tentang Kami</Link>
             <Link href="#" className="hover:text-indigo-600 transition-colors">Bantuan</Link>
           </div>
-          <div className="flex gap-4">
-             <Link href="/dashboard/owner">
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  className="clay-button bg-white text-indigo-600 !px-4 !py-2 text-sm"
-                >
-                  Mulai Sewa
-                </motion.button>
-             </Link>
+          <div className="flex gap-4 items-center">
+            <Link href="/login" className="hover:text-indigo-600 font-bold transition-colors text-slate-700 text-sm px-2">
+              Masuk
+            </Link>
+            <Link href="/register">
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                className="clay-button bg-indigo-500 text-white !px-4 !py-2 text-sm"
+              >
+                Daftar
+              </motion.button>
+            </Link>
           </div>
         </div>
       </nav>
