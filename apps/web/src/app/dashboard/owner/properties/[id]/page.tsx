@@ -2,9 +2,15 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, Plus, X, MapPin } from 'lucide-react';
+import { ArrowLeft, Plus, X, MapPin, Pencil, Trash2 } from 'lucide-react';
 import Link from 'next/link';
 import { fetchWithAuth } from '@/lib/api-client';
+import { toast } from 'sonner';
+
+const ROOM_FACILITIES = [
+  'Kamar Mandi Dalam', 'Jendela Luar', 'AC', 'Kipas Angin',
+  'TV', 'Kasur', 'Lemari', 'Meja Belajar', 'WiFi Khusus', 'Water Heater'
+];
 
 export default function PropertyDetailsPage({ params }: { params: { id: string } }) {
   const propertyId = params.id;
@@ -14,8 +20,17 @@ export default function PropertyDetailsPage({ params }: { params: { id: string }
   const [loading, setLoading] = useState(true);
   
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [formData, setFormData] = useState({ room_number: '', price_per_month: '', status: true });
+  const [editMode, setEditMode] = useState(false);
+  const [editingRoomId, setEditingRoomId] = useState<string | null>(null);
+  
+  const [formData, setFormData] = useState({ 
+    room_number: '', 
+    price_per_month: '', 
+    status: true,
+    facilities: [] as string[]
+  });
   const [submitting, setSubmitting] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   useEffect(() => {
     fetchData();
@@ -32,35 +47,96 @@ export default function PropertyDetailsPage({ params }: { params: { id: string }
       setRooms(roomsData);
     } catch (error) {
       console.error('Failed to fetch data:', error);
+      toast.error('Gagal mengambil data properti');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleAddRoom = async (e: React.FormEvent) => {
+  const openAddModal = () => {
+    setEditMode(false);
+    setEditingRoomId(null);
+    setFormData({ room_number: '', price_per_month: '', status: true, facilities: [] });
+    setIsModalOpen(true);
+  };
+
+  const openEditModal = (room: any) => {
+    setEditMode(true);
+    setEditingRoomId(room.id);
+    setFormData({
+      room_number: room.room_number,
+      price_per_month: room.price_per_month.toString(),
+      status: room.is_available,
+      facilities: room.facilities || []
+    });
+    setIsModalOpen(true);
+  };
+
+  const handleFacilityToggle = (facility: string) => {
+    setFormData(prev => {
+      const exists = prev.facilities.includes(facility);
+      if (exists) {
+        return { ...prev, facilities: prev.facilities.filter(f => f !== facility) };
+      } else {
+        return { ...prev, facilities: [...prev.facilities, facility] };
+      }
+    });
+  };
+
+  const handleAddOrEditRoom = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (submitting) return;
+
     try {
       setSubmitting(true);
+      toast.loading(editMode ? 'Menyimpan perubahan...' : 'Menambahkan kamar...', { id: 'room-submit' });
       
       const payload = {
         room_number: formData.room_number,
         price_per_month: parseInt(formData.price_per_month.replace(/\D/g, '') || '0', 10),
-        status: formData.status
+        status: formData.status,
+        facilities: formData.facilities
       };
 
-      await fetchWithAuth(`/properties/${propertyId}/rooms`, {
-        method: 'POST',
-        body: JSON.stringify(payload),
-      });
+      if (editMode && editingRoomId) {
+        await fetchWithAuth(`/properties/${propertyId}/rooms/${editingRoomId}`, {
+          method: 'PATCH',
+          body: JSON.stringify(payload),
+        });
+        toast.success('Kamar berhasil diperbarui!', { id: 'room-submit' });
+      } else {
+        await fetchWithAuth(`/properties/${propertyId}/rooms`, {
+          method: 'POST',
+          body: JSON.stringify(payload),
+        });
+        toast.success('Kamar baru berhasil ditambahkan!', { id: 'room-submit' });
+      }
       
       setIsModalOpen(false);
-      setFormData({ room_number: '', price_per_month: '', status: true });
       fetchData(); // Refresh data
-    } catch (error) {
-      console.error('Failed to add room:', error);
-      alert('Gagal menambahkan kamar. Silakan coba lagi.');
+    } catch (error: any) {
+      console.error('Failed to save room:', error);
+      toast.error(`Gagal menyimpan kamar: ${error.message}`, { id: 'room-submit' });
     } finally {
       setSubmitting(false);
+    }
+  };
+
+  const handleDeleteRoom = async (roomId: string) => {
+    if (confirm('Anda yakin ingin menghapus kamar ini secara permanen?')) {
+      try {
+        setDeletingId(roomId);
+        toast.loading('Menghapus kamar...', { id: 'delete-room' });
+        await fetchWithAuth(`/properties/${propertyId}/rooms/${roomId}`, {
+          method: 'DELETE',
+        });
+        toast.success('Kamar berhasil dihapus', { id: 'delete-room' });
+        fetchData();
+      } catch (error: any) {
+        toast.error(`Gagal menghapus kamar: ${error.message}`, { id: 'delete-room' });
+      } finally {
+        setDeletingId(null);
+      }
     }
   };
 
@@ -97,12 +173,12 @@ export default function PropertyDetailsPage({ params }: { params: { id: string }
       </div>
 
       <div className="clay-card p-8">
-        <div className="flex items-center justify-between mb-8">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-8 gap-4">
           <h3 className="text-xl font-black text-slate-800">Daftar Kamar</h3>
           <motion.button 
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
-            onClick={() => setIsModalOpen(true)}
+            onClick={openAddModal}
             className="clay-button bg-indigo-500 text-white !px-4 flex items-center gap-2"
           >
             <Plus size={18} />
@@ -120,28 +196,54 @@ export default function PropertyDetailsPage({ params }: { params: { id: string }
             <table className="w-full text-left border-separate border-spacing-y-4">
               <thead>
                 <tr className="text-slate-400 font-bold text-sm uppercase tracking-wider">
-                  <th className="pb-2 px-4">No. Kamar</th>
-                  <th className="pb-2 px-4">Harga (Bulan)</th>
-                  <th className="pb-2 px-4">Status</th>
-                  <th className="pb-2 px-4">Fasilitas</th>
-                  <th className="pb-2 px-4"></th>
+                  <th className="pb-2 px-4 whitespace-nowrap">No. Kamar</th>
+                  <th className="pb-2 px-4 whitespace-nowrap">Harga (Bulan)</th>
+                  <th className="pb-2 px-4 whitespace-nowrap">Status</th>
+                  <th className="pb-2 px-4 whitespace-nowrap">Fasilitas</th>
+                  <th className="pb-2 px-4 text-right whitespace-nowrap">Aksi</th>
                 </tr>
               </thead>
               <tbody>
                 {rooms.map((room) => (
                   <tr key={room.id} className="bg-slate-50/50 hover:bg-slate-50 transition-colors rounded-2xl group">
                     <td className="py-4 px-4 font-black text-slate-700 rounded-l-2xl">{room.room_number}</td>
-                    <td className="py-4 px-4 font-bold text-indigo-600">{formatRupiah(room.price_per_month)}</td>
+                    <td className="py-4 px-4 font-bold text-indigo-600 whitespace-nowrap">{formatRupiah(room.price_per_month)}</td>
                     <td className="py-4 px-4">
-                      <span className={`px-3 py-1 rounded-full text-xs font-bold ${room.is_available ? 'bg-emerald-100 text-emerald-600' : 'bg-rose-100 text-rose-600'}`}>
+                      <span className={`px-3 py-1 rounded-full text-xs font-bold ${room.is_available ? 'bg-emerald-100 text-emerald-600 border border-emerald-200' : 'bg-rose-100 text-rose-600 border border-rose-200'}`}>
                         {room.is_available ? 'Tersedia' : 'Terisi'}
                       </span>
                     </td>
-                    <td className="py-4 px-4 text-sm text-slate-400">
-                      {room.facilities && room.facilities.length > 0 ? room.facilities.join(', ') : '-'}
+                    <td className="py-4 px-4 text-sm text-slate-500 font-medium">
+                      {room.facilities && room.facilities.length > 0 ? (
+                        <div className="flex flex-wrap gap-1.5">
+                          {room.facilities.map((f: string) => (
+                            <span key={f} className="bg-white border border-slate-200 px-2 py-0.5 rounded text-[10px] whitespace-nowrap">
+                              {f}
+                            </span>
+                          ))}
+                        </div>
+                      ) : (
+                        <span className="italic text-slate-400">-</span>
+                      )}
                     </td>
                     <td className="py-4 px-4 text-right rounded-r-2xl">
-                      <button className="text-slate-400 hover:text-indigo-500 font-bold text-sm transition-colors">Edit</button>
+                      <div className="flex items-center justify-end gap-2">
+                        <button 
+                          onClick={() => openEditModal(room)}
+                          className="p-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition"
+                          title="Edit Kamar"
+                        >
+                          <Pencil size={18} />
+                        </button>
+                        <button 
+                          onClick={() => handleDeleteRoom(room.id)}
+                          disabled={deletingId === room.id}
+                          className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition disabled:opacity-50"
+                          title="Hapus Kamar"
+                        >
+                          <Trash2 size={18} />
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -151,15 +253,15 @@ export default function PropertyDetailsPage({ params }: { params: { id: string }
         </div>
       </div>
 
-      {/* Add Room Modal */}
+      {/* Add/Edit Room Modal */}
       <AnimatePresence>
         {isModalOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/20 backdrop-blur-sm">
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm overflow-y-auto">
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
-              className="clay-card w-full max-w-md p-8 relative"
+              className="clay-card w-full max-w-lg p-6 md:p-8 relative my-8"
             >
               <button 
                 onClick={() => setIsModalOpen(false)}
@@ -168,61 +270,78 @@ export default function PropertyDetailsPage({ params }: { params: { id: string }
                 <X size={24} />
               </button>
               
-              <h2 className="text-2xl font-black text-slate-800 mb-6">Tambah Kamar Baru</h2>
+              <h2 className="text-2xl font-black text-slate-800 mb-6">{editMode ? 'Edit Kamar' : 'Tambah Kamar Baru'}</h2>
               
-              <form onSubmit={handleAddRoom} className="space-y-4">
-                <div>
-                  <label className="block text-slate-600 font-bold text-sm mb-2">Nomor Kamar</label>
-                  <input
-                    type="text"
-                    required
-                    value={formData.room_number}
-                    onChange={(e) => setFormData({...formData, room_number: e.target.value})}
-                    placeholder="Contoh: A-01, B-02"
-                    className="w-full px-4 py-3 bg-white/50 border border-slate-200 rounded-2xl outline-none focus:ring-2 ring-indigo-300 transition-all font-medium text-slate-700 uppercase"
-                  />
-                </div>
-                
-                <div>
-                  <label className="block text-slate-600 font-bold text-sm mb-2">Harga per Bulan (Rp)</label>
-                  <input
-                    type="text"
-                    required
-                    value={formData.price_per_month}
-                    onChange={(e) => {
-                      // Allow only numbers
-                      const val = e.target.value.replace(/\D/g, '');
-                      // Format as dot separated string (e.g., 1.500.000)
-                      const formatted = val ? new Intl.NumberFormat('id-ID').format(parseInt(val)) : '';
-                      setFormData({...formData, price_per_month: formatted});
-                    }}
-                    placeholder="Contoh: 1.500.000"
-                    className="w-full px-4 py-3 bg-white/50 border border-slate-200 rounded-2xl outline-none focus:ring-2 ring-indigo-300 transition-all font-black text-slate-700"
-                  />
+              <form onSubmit={handleAddOrEditRoom} className="space-y-5">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                  <div>
+                    <label className="block text-slate-600 font-bold text-sm mb-2">Nomor Kamar</label>
+                    <input
+                      type="text"
+                      required
+                      value={formData.room_number}
+                      onChange={(e) => setFormData({...formData, room_number: e.target.value})}
+                      placeholder="Contoh: A-01"
+                      className="w-full px-4 py-3 bg-white border border-slate-200 rounded-2xl outline-none focus:ring-2 ring-indigo-300 transition-all font-medium text-slate-700 uppercase"
+                    />
+                  </div>
+                  
+                  <div>
+                    <label className="block text-slate-600 font-bold text-sm mb-2">Harga / Bulan (Rp)</label>
+                    <input
+                      type="text"
+                      required
+                      value={formData.price_per_month}
+                      onChange={(e) => {
+                        const val = e.target.value.replace(/\D/g, '');
+                        const formatted = val ? new Intl.NumberFormat('id-ID').format(parseInt(val)) : '';
+                        setFormData({...formData, price_per_month: formatted});
+                      }}
+                      placeholder="1.500.000"
+                      className="w-full px-4 py-3 bg-white border border-slate-200 rounded-2xl outline-none focus:ring-2 ring-indigo-300 transition-all font-black text-slate-700"
+                    />
+                  </div>
                 </div>
 
                 <div>
-                  <label className="block text-slate-600 font-bold text-sm mb-2">Status Kamar</label>
+                  <label className="block text-slate-600 font-bold text-sm mb-3">Fasilitas Khusus Kamar</label>
+                  <div className="grid grid-cols-2 gap-2">
+                    {ROOM_FACILITIES.map((facility) => (
+                      <label key={facility} className="flex items-center gap-2 cursor-pointer p-2 hover:bg-slate-50 rounded-lg transition-colors border border-transparent hover:border-slate-100">
+                        <input
+                          type="checkbox"
+                          checked={formData.facilities.includes(facility)}
+                          onChange={() => handleFacilityToggle(facility)}
+                          className="w-4 h-4 text-indigo-600 rounded focus:ring-indigo-500 cursor-pointer"
+                        />
+                        <span className="text-sm font-medium text-slate-600">{facility}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-slate-600 font-bold text-sm mb-2">Status Ketersediaan</label>
                   <div className="flex gap-4 mt-2">
-                    <label className="flex items-center gap-2 cursor-pointer">
+                    <label className="flex items-center gap-2 cursor-pointer bg-emerald-50 px-4 py-2 rounded-xl border border-emerald-100 transition-colors">
                       <input 
                         type="radio" 
                         name="status" 
                         checked={formData.status === true}
                         onChange={() => setFormData({...formData, status: true})}
-                        className="w-4 h-4 text-indigo-600 focus:ring-indigo-500"
+                        className="w-4 h-4 text-emerald-600 focus:ring-emerald-500"
                       />
-                      <span className="font-medium text-slate-700">Tersedia</span>
+                      <span className="font-bold text-emerald-700 text-sm">Kamar Tersedia</span>
                     </label>
-                    <label className="flex items-center gap-2 cursor-pointer">
+                    <label className="flex items-center gap-2 cursor-pointer bg-rose-50 px-4 py-2 rounded-xl border border-rose-100 transition-colors">
                       <input 
                         type="radio" 
                         name="status" 
                         checked={formData.status === false}
                         onChange={() => setFormData({...formData, status: false})}
-                        className="w-4 h-4 text-indigo-600 focus:ring-indigo-500"
+                        className="w-4 h-4 text-rose-600 focus:ring-rose-500"
                       />
-                      <span className="font-medium text-slate-700">Penuh / Terisi</span>
+                      <span className="font-bold text-rose-700 text-sm">Penuh / Terisi</span>
                     </label>
                   </div>
                 </div>
@@ -234,7 +353,7 @@ export default function PropertyDetailsPage({ params }: { params: { id: string }
                   disabled={submitting}
                   className="w-full py-4 mt-6 bg-gradient-to-r from-indigo-500 to-purple-500 text-white font-bold rounded-2xl shadow-lg shadow-indigo-200 hover:shadow-xl transition-all disabled:opacity-50"
                 >
-                  {submitting ? 'Menyimpan...' : 'Simpan Kamar'}
+                  {submitting ? 'Menyimpan...' : (editMode ? 'Simpan Perubahan' : 'Simpan Kamar Baru')}
                 </motion.button>
               </form>
             </motion.div>
