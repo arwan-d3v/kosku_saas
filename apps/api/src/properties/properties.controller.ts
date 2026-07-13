@@ -27,6 +27,7 @@ export class PropertiesController {
     body: {
       name: string;
       address: string;
+      city: string;
       description?: string;
       facilities?: string[];
     },
@@ -55,6 +56,7 @@ export class PropertiesController {
     body: {
       name?: string;
       address?: string;
+      city?: string;
       description?: string;
       facilities?: string[];
     },

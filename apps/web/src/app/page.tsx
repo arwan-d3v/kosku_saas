@@ -10,6 +10,7 @@ export default function LandingPage() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [role, setRole] = useState<string | null>(null);
   const [properties, setProperties] = useState<any[]>([]);
+  const [selectedCity, setSelectedCity] = useState('Semua');
   const router = useRouter();
 
   useEffect(() => {
@@ -54,18 +55,29 @@ export default function LandingPage() {
     { label: 'Bantuan', icon: <HeadphonesIcon className="text-orange-500" size={28} />, href: '#' },
   ];
 
-  const cities = ['Bandung', 'Jakarta Pusat', 'Yogyakarta', 'Surabaya', 'Malang', 'Semarang', 'Bali'];
+  const cities = ['Semua', ...Array.from(new Set(properties.map((p: any) => p.city).filter(Boolean)))];
+  
+  const calculateScore = (prop: any) => {
+    const availableRooms = prop.rooms ? prop.rooms.filter((r: any) => r.is_available).length : 0;
+    const facilitiesScore = prop.facilities ? prop.facilities.length * 10 : 0;
+    const availabilityScore = availableRooms > 0 ? (availableRooms * 5) + 100 : 0; // +100 to prioritize available properties
+    return facilitiesScore + availabilityScore;
+  };
+
+  const filteredProperties = (selectedCity === 'Semua' ? properties : properties.filter((p: any) => p.city === selectedCity))
+    .sort((a, b) => calculateScore(b) - calculateScore(a));
 
   return (
     <div className="min-h-screen bg-slate-50 pb-24 md:pb-12 font-sans overflow-x-hidden">
-      {/* Desktop Top Navbar (Hidden on Mobile) */}
-      <nav className="hidden md:flex bg-white shadow-[0_2px_10px_rgba(0,0,0,0.05)] px-8 py-4 items-center justify-between sticky top-0 z-50">
+      {/* Desktop & Mobile Top Navbar */}
+      <nav className="flex bg-white shadow-[0_2px_10px_rgba(0,0,0,0.05)] px-5 md:px-8 py-4 items-center justify-between sticky top-0 z-50">
         <div className="flex items-center gap-8">
-          <Link href="/" className="text-2xl font-black flex items-center gap-1.5 text-blue-600">
+          <Link href="/" className="text-xl md:text-2xl font-black flex items-center gap-1.5 text-blue-600">
             KosKu <span className="w-2.5 h-2.5 rounded-full bg-yellow-400"></span>
           </Link>
           
-          <div className="relative group">
+          {/* Desktop Search */}
+          <div className="hidden md:block relative group">
             <div className="flex items-center gap-2 bg-slate-100 text-slate-500 px-4 py-2 rounded-full text-sm font-medium w-64 hover:bg-slate-200 transition cursor-text">
               <Search size={16} />
               <input type="text" placeholder="Cari kos di Jakarta..." className="bg-transparent outline-none w-full placeholder-slate-400" />
@@ -73,7 +85,8 @@ export default function LandingPage() {
           </div>
         </div>
 
-        <div className="flex items-center gap-6 text-sm font-bold text-slate-700">
+        {/* Desktop Menu */}
+        <div className="hidden md:flex items-center gap-6 text-sm font-bold text-slate-700">
           <Link href="/search" className="hover:text-blue-600 transition">Sewa Kos</Link>
           <Link href="/dashboard/owner" className="hover:text-blue-600 transition">Mitra KosKu</Link>
           <Link href="#" className="hover:text-blue-600 transition">Bantuan</Link>
@@ -88,58 +101,51 @@ export default function LandingPage() {
             ) : (
               <>
                 <Link href="/login">
-                  <button className="px-5 py-2 text-blue-600 border-2 border-transparent hover:bg-blue-50 transition rounded-full">Login</button>
+                  <button className="px-5 py-2 text-blue-600 border-2 border-transparent hover:bg-blue-50 transition rounded-full">Masuk</button>
                 </Link>
                 <Link href="/register">
-                  <button className="px-5 py-2 bg-blue-600 text-white rounded-full hover:bg-blue-700 transition shadow-md shadow-blue-500/20">Register</button>
+                  <button className="px-5 py-2 bg-blue-600 text-white rounded-full hover:bg-blue-700 transition shadow-md shadow-blue-500/20">Daftar</button>
                 </Link>
               </>
             )}
           </div>
         </div>
+
+        {/* Mobile Menu Actions */}
+        <div className="flex md:hidden items-center gap-3">
+          {isAuthenticated ? (
+            <Link href={role === 'TENANT_ADMIN' || role === 'SUPERADMIN' ? '/dashboard/owner' : '/dashboard/tenant'}>
+               <div className="bg-blue-100 text-blue-600 p-2 rounded-full">
+                 <User size={18} />
+               </div>
+            </Link>
+          ) : (
+            <div className="flex items-center gap-2 text-sm font-bold">
+              <Link href="/login" className="text-blue-600 px-3 py-1.5">Masuk</Link>
+              <Link href="/register" className="bg-blue-600 text-white px-4 py-1.5 rounded-full shadow-sm">Daftar</Link>
+            </div>
+          )}
+        </div>
       </nav>
 
-      {/* Mobile Blue Header Section (Hidden on Desktop) */}
-      <div className="md:hidden bg-blue-600 text-white pt-6 pb-28 px-5 rounded-b-[40px] relative overflow-hidden">
+      {/* Hero Banner Section (Responsive) */}
+      <div className="bg-blue-600 text-white pt-8 pb-28 md:pt-16 md:pb-36 px-5 md:px-12 rounded-b-[40px] md:rounded-b-[80px] relative overflow-hidden flex flex-col md:flex-row items-center md:items-start justify-center md:justify-between max-w-full">
         {/* Subtle background decoration */}
-        <div className="absolute top-10 right-0 opacity-10">
+        <div className="absolute top-10 right-0 md:right-32 opacity-10 md:scale-150 transform">
           <svg width="200" height="200" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
             <path d="M45.5 -25.5C124.5 -55.5 187.5 10 216 67.5C244.5 125 187.5 198 123 214C58.5 230 -25.5 181 -61.5 116.5C-97.5 52 -33.5 4.5 45.5 -25.5Z" fill="white"/>
           </svg>
         </div>
 
-        <div className="flex justify-between items-center mb-8 relative z-10">
-          <Link href="/" className="text-xl font-black tracking-tight flex items-center gap-1.5">
-            KosKu <span className="w-2.5 h-2.5 rounded-full bg-yellow-400"></span>
-          </Link>
-          <div className="flex gap-4">
-             {isAuthenticated ? (
-               <Link href={role === 'TENANT_ADMIN' || role === 'SUPERADMIN' ? '/dashboard/owner' : '/dashboard/tenant'} className="text-sm font-semibold tracking-wide flex items-center gap-1">
-                 <User size={16} /> AKUN
-               </Link>
-             ) : (
-               <Link href="/login" className="text-sm font-semibold tracking-wide">
-                 MASUK
-               </Link>
-             )}
+        <div className="relative z-10 w-full md:max-w-xl md:mx-auto md:text-center mt-2 md:mt-6">
+          <div className="inline-flex items-center gap-1.5 text-xs font-semibold bg-white/20 px-2 py-1 rounded-md mb-3 border border-white/30 backdrop-blur-sm">
+            <ShieldCheck size={14} /> Terverifikasi
           </div>
-        </div>
-        
-        <div className="relative z-10 flex items-center justify-between">
-          <div className="max-w-[70%]">
-            <div className="inline-flex items-center gap-1.5 text-xs font-semibold bg-white/20 px-2 py-1 rounded-md mb-3 border border-white/30 backdrop-blur-sm">
-              <ShieldCheck size={14} /> Terverifikasi
-            </div>
-            <h2 className="text-[22px] font-bold leading-snug mb-2">
-              Pilihan Kos Terbaik <br/> di Sekitar Kampus
-            </h2>
-            <p className="text-sm opacity-90 mb-5 font-medium">Mulai dari Rp 500.000 / bulan</p>
-            <div className="text-xs border border-white/30 rounded-full px-2.5 py-1 inline-block">1/3</div>
-          </div>
-        </div>
-        
-        <div className="absolute bottom-6 right-5 text-xs font-medium bg-black/20 px-3 py-1.5 rounded-full backdrop-blur-md cursor-pointer hover:bg-black/30 transition hidden">
-          {/* Promo button removed */}
+          <h2 className="text-[26px] md:text-4xl md:leading-tight font-bold leading-snug mb-3">
+            Pilihan Kos Terbaik <br className="md:hidden"/> di Sekitar Kampus
+          </h2>
+          <p className="text-sm md:text-base opacity-90 mb-5 font-medium">Mulai dari Rp 500.000 / bulan</p>
+          <div className="text-xs md:text-sm border border-white/30 rounded-full px-2.5 py-1 inline-block">1/3</div>
         </div>
       </div>
 
@@ -164,8 +170,11 @@ export default function LandingPage() {
         
         {/* Filter Chips */}
         <div className="flex gap-2 overflow-x-auto pb-4 hide-scrollbar snap-x">
-          {cities.map((city, idx) => (
-            <button key={idx} className={`snap-start whitespace-nowrap px-4 py-1.5 md:py-2 md:px-5 rounded-full border text-xs md:text-sm font-semibold transition ${idx === 0 ? 'border-blue-500 text-blue-600 bg-blue-50' : 'border-slate-300 text-slate-600 hover:border-blue-500 hover:text-blue-600'}`}>
+          {cities.map((city: any, idx) => (
+            <button 
+              key={idx} 
+              onClick={() => setSelectedCity(city)}
+              className={`snap-start whitespace-nowrap px-4 py-1.5 md:py-2 md:px-5 rounded-full border text-xs md:text-sm font-semibold transition ${selectedCity === city ? 'border-blue-500 text-blue-600 bg-blue-50' : 'border-slate-300 text-slate-600 hover:border-blue-500 hover:text-blue-600'}`}>
               {city}
             </button>
           ))}
@@ -173,7 +182,12 @@ export default function LandingPage() {
 
         {/* Property Horizontal List */}
         <div className="flex gap-4 overflow-x-auto pb-6 pt-2 hide-scrollbar snap-x flex-nowrap w-full">
-          {properties.length > 0 ? properties.slice(0, 6).map((prop, idx) => {
+          {properties.length === 0 ? (
+            [1, 2, 3].map((_, idx) => (
+               <div key={`skeleton-${idx}`} className="flex-none w-[220px] md:w-[280px] bg-slate-100 animate-pulse rounded-2xl h-[240px] snap-start border border-slate-200"></div>
+            ))
+          ) : filteredProperties.length > 0 ? (
+            filteredProperties.slice(0, 6).map((prop, idx) => {
             const hasImage = prop.images && prop.images.length > 0;
             const price = prop.rooms && prop.rooms.length > 0
                 ? Math.min(...prop.rooms.map((r: any) => Number(r.price_per_month)))
@@ -206,9 +220,10 @@ export default function LandingPage() {
               </div>
             </div>
             );
-          }) : [1, 2, 3].map((_, idx) => (
-             <div key={`skeleton-${idx}`} className="flex-none w-[220px] md:w-[280px] bg-slate-100 animate-pulse rounded-2xl h-[240px] snap-start border border-slate-200"></div>
-          ))}
+            })
+          ) : (
+            <div className="w-full text-center py-10 text-slate-500 font-bold">Kosan tidak ditemukan di area ini.</div>
+          )}
         </div>
       </div>
       

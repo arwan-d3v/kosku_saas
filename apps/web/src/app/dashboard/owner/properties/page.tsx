@@ -16,7 +16,7 @@ export default function PropertiesPage() {
   const [isSlideOverOpen, setIsSlideOverOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   
-  const [formData, setFormData] = useState<{name: string, address: string, description: string, facilities: string[], images: string[]}>({ name: '', address: '', description: '', facilities: [], images: [] });
+  const [formData, setFormData] = useState<{name: string, city: string, address: string, description: string, facilities: string[], images: string[]}>({ name: '', city: '', address: '', description: '', facilities: [], images: [] });
   const [submitting, setSubmitting] = useState(false);
   const [uploadingImage, setUploadingImage] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -39,7 +39,7 @@ export default function PropertiesPage() {
 
   const openAddForm = () => {
     setEditingId(null);
-    setFormData({ name: '', address: '', description: '', facilities: [], images: [] });
+    setFormData({ name: '', city: '', address: '', description: '', facilities: [], images: [] });
     setIsSlideOverOpen(true);
   };
 
@@ -47,6 +47,7 @@ export default function PropertiesPage() {
     setEditingId(property.id);
     setFormData({ 
       name: property.name, 
+      city: property.city || '',
       address: property.address, 
       description: property.description || '', 
       facilities: property.facilities || [],
@@ -362,6 +363,18 @@ export default function PropertiesPage() {
                       value={formData.name}
                       onChange={(e) => setFormData({...formData, name: e.target.value})}
                       placeholder="Contoh: Kosan Mawar Eksklusif"
+                      className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl outline-none focus:ring-2 ring-blue-500/20 focus:border-blue-500 transition-all font-medium text-slate-700 placeholder-slate-400"
+                    />
+                  </div>
+                  
+                  <div>
+                    <label className="block text-slate-700 font-bold text-sm mb-2">Kota / Area</label>
+                    <input
+                      type="text"
+                      required
+                      value={formData.city}
+                      onChange={(e) => setFormData({...formData, city: e.target.value})}
+                      placeholder="Contoh: Jakarta Selatan"
                       className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl outline-none focus:ring-2 ring-blue-500/20 focus:border-blue-500 transition-all font-medium text-slate-700 placeholder-slate-400"
                     />
                   </div>

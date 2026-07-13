@@ -3,7 +3,8 @@
 import React from 'react';
 import { LayoutDashboard, Home, Users, CreditCard, Settings, LogOut } from 'lucide-react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
+import { supabase } from '@/lib/supabase';
 
 export default function OwnerLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -17,6 +18,16 @@ export default function OwnerLayout({ children }: { children: React.ReactNode })
   ];
 
   const [avatar, setAvatar] = React.useState("https://api.dicebear.com/7.x/avataaars/svg?seed=Felix");
+  const router = useRouter();
+
+  const handleLogout = async () => {
+    try {
+      await supabase.auth.signOut();
+      router.push('/');
+    } catch (error) {
+      console.error('Logout error:', error);
+    }
+  };
   
   React.useEffect(() => {
     import('@/lib/supabase').then(({ supabase }) => {
@@ -65,7 +76,10 @@ export default function OwnerLayout({ children }: { children: React.ReactNode })
             })}
           </nav>
 
-          <button className="flex items-center gap-4 px-4 py-3 text-red-500 font-bold hover:bg-red-50 rounded-2xl transition-all">
+          <button 
+            onClick={handleLogout}
+            className="flex items-center gap-4 px-4 py-3 text-red-500 font-bold hover:bg-red-50 rounded-2xl transition-all w-full text-left"
+          >
             <LogOut size={20} />
             Keluar
           </button>

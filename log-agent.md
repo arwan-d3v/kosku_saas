@@ -1,16 +1,14 @@
 ## Log Agent
-- **Last Edited By:** Jules (Agent)
-- **Timestamp:** Mon Jul 13 05:26:55 UTC 2026
+- **Last Edited By:** Antigravity (Agent)
+- **Timestamp:** Mon Jul 13 2026
 - **Changes Made:**
-  - Added Supabase migrations and NestJS logic for Early Bird Down Payment rules (10% expires in 24h; 25% expires in 7d).
-  - Updated frontend with dynamic fetching for properties, Google OAuth login (Supabase), and mobile layout fixes (resolving overlapping carousels via flex-nowrap snap-x).
-  - Fixed Next.js build error (Next prerender error on Supabase url missing) by adding `|| 'placeholder'` fallbacks for `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` in `apps/web/src/lib/supabase.ts`.
-  - Replaced hardcoded mock data in `apps/web/src/app/dashboard/owner/page.tsx` with dynamic fetching for Early Bird bookings (calculating countdowns for DP_10 and DP_25).
-  - Validated `apps/web/src/app/dashboard/owner/properties/page.tsx` is mobile responsive, with mobile grid layout using cards, and desktop layout using tables.
-  - Gated the Google Maps link in `apps/web/src/app/properties/[id]/page.tsx` behind an `AuthGate` modal, prompting unauthenticated users to login or create an account to view exact locations.
-  - Added Auth Gate overlay for unauthenticated users for booking interactions.
+  - Synchronized mobile and desktop UI layouts in `apps/web/src/app/page.tsx` for consistent navigation and responsive hero sections.
+  - Implemented dynamic city filtering reading directly from properties in the database instead of hardcoded city arrays on both Landing and Search pages.
+  - Updated Backend `properties.service.ts` and `properties.controller.ts` to accept `city` input upon property creation/update, replacing the 'Unknown' hardcoded value.
+  - Added a "Kota / Area" input field in the Owner Dashboard for adding/editing properties (`apps/web/src/app/dashboard/owner/properties/page.tsx`).
+  - Built a Smart Recommendation Scoring System for the Landing Page and Search Page (`calculateScore(prop)`). Prioritizes properties with available rooms (+100 base score & +5 per available room) and multiple facilities (+10 per facility). Fully booked properties are dynamically pushed to the bottom of the search results.
+  - Fixed the non-functional "Keluar" (Logout) button on the desktop owner layout (`apps/web/src/app/dashboard/owner/layout.tsx`).
 - **Scan for Next Needs:**
-  - Ensure end-to-end integration of frontend payment confirmation status with the owner dashboard is correctly handling socket connections or interval polling for real-time updates.
-  - Implement actual receipt upload flow to Cloudflare R2 when the Owner clicks "Upload Resi/Offline" on the Early Bird dashboard.
-  - Optimize rendering speed for property images on the public view.
-- **Priority Recommendations:** High - Finish the offline payment upload receipt functionality for owner dashboard and tenant view.
+  - Consider moving the sorting/scoring algorithm to the backend (`properties.service.ts`) as the database scales, potentially integrating actual database ratings and repetitive rental metrics.
+  - Continue implementing offline payment receipt upload flow to Cloudflare R2 as planned previously.
+- **Priority Recommendations:** Medium - Finish the offline payment upload receipt functionality for owner dashboard and tenant view.

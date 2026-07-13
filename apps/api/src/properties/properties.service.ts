@@ -10,6 +10,7 @@ export class PropertiesService {
     data: {
       name: string;
       address: string;
+      city: string;
       description?: string;
       facilities?: string[];
     },
@@ -23,7 +24,7 @@ export class PropertiesService {
         name: data.name,
         address: data.address,
         description: data.description || '',
-        city: 'Unknown', // Adding a default city as it is required in schema, can be modified later
+        city: data.city || 'Unknown',
         facilities: data.facilities || [],
       })
       .select()
@@ -167,6 +168,7 @@ export class PropertiesService {
     data: {
       name?: string;
       address?: string;
+      city?: string;
       description?: string;
       facilities?: string[];
     },
@@ -176,6 +178,7 @@ export class PropertiesService {
     const updatePayload: any = {};
     if (data.name !== undefined) updatePayload.name = data.name;
     if (data.address !== undefined) updatePayload.address = data.address;
+    if (data.city !== undefined) updatePayload.city = data.city;
     if (data.description !== undefined)
       updatePayload.description = data.description;
     if (data.facilities !== undefined)

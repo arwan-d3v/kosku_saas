@@ -63,6 +63,15 @@ export default function SearchPage() {
       result = result.filter(p => p.city.toLowerCase() === selectedCity.toLowerCase());
     }
 
+    const calculateScore = (prop: any) => {
+      const availableRooms = prop.rooms ? prop.rooms.filter((r: any) => r.is_available).length : 0;
+      const facilitiesScore = prop.facilities ? prop.facilities.length * 10 : 0;
+      const availabilityScore = availableRooms > 0 ? (availableRooms * 5) + 100 : 0; // +100 to prioritize available properties
+      return facilitiesScore + availabilityScore;
+    };
+
+    result.sort((a, b) => calculateScore(b) - calculateScore(a));
+
     setFilteredProperties(result);
   }, [searchQuery, selectedCity, properties]);
 
