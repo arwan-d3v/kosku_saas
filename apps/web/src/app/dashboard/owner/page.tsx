@@ -11,6 +11,7 @@ export default function OwnerDashboard() {
   const [availableRoomsCount, setAvailableRoomsCount] = useState(0);
   const [revenue, setRevenue] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [earlyBirdBookings, setEarlyBirdBookings] = useState<any[]>([]);
 
   // Mock data for charts to demonstrate professional look
   const revenueData = [
@@ -65,6 +66,13 @@ export default function OwnerDashboard() {
       const paidBookings = bookings.filter((b: any) => b.status === 'PAID');
       const totalRev = paidBookings.reduce((sum: number, b: any) => sum + Number(b.total_price), 0);
       setRevenue(totalRev);
+
+      // Filter early bird bookings (dp_type is not full and booking is recent)
+      const ebBookings = bookings.filter((b: any) =>
+        (b.dp_type === 'DP_10' || b.dp_type === 'DP_25') &&
+        b.status === 'PAID'
+      );
+      setEarlyBirdBookings(ebBookings);
 
     } catch (error) {
       console.error('Failed to fetch dashboard data:', error);
@@ -171,37 +179,57 @@ export default function OwnerDashboard() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {[
-            { name: 'Budi Santoso', type: 'DP_10', prop: 'Kamar 1A (Kosan Andalan)', expire: 'Sisa Waktu: 04j 12m', timeLimit: 'Hangus dalam 24 Jam' },
-            { name: 'Siti Aminah', type: 'DP_25', prop: 'Kamar 2B (Kosan Eksklusif)', expire: 'Sisa Waktu: 4 Hari', timeLimit: 'Jeda 7 Hari' }
-          ].map((dp, i) => (
-            <div key={i} className="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 flex flex-col justify-between">
-              <div>
-                <div className="flex justify-between items-start mb-2">
-                  <h4 className="font-bold text-slate-800">{dp.name}</h4>
-                  <span className={`text-[10px] font-bold px-2 py-1 rounded-md ${dp.type === 'DP_10' ? 'bg-rose-100 text-rose-700' : 'bg-orange-100 text-orange-700'}`}>
-                    {dp.type === 'DP_10' ? 'Early Bird (DP 10%)' : 'Booking Aman (DP 25%)'}
-                  </span>
-                </div>
-                <p className="text-xs text-slate-500 font-medium">{dp.prop}</p>
-                <div className="mt-3 flex items-center gap-1 text-xs font-bold text-rose-600 bg-rose-50 w-fit px-2 py-1 rounded-full">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-                  {dp.expire} ({dp.timeLimit})
-                </div>
-              </div>
+        {earlyBirdBookings.length === 0 ? (
+          <div className="text-center py-4 bg-white rounded-xl shadow-sm border border-amber-100">
+            <p className="text-sm text-amber-700 font-medium">Tidak ada penyewa dengan sistem Early Bird/Down Payment saat ini.</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {earlyBirdBookings.map((booking, i) => {
+              const expireDate = new Date(booking.dp_expiry);
+              const now = new Date();
+              const diffMs = expireDate.getTime() - now.getTime();
+              const isExpired = diffMs <= 0;
+              let expireText = isExpired ? 'Hangus' : 'Berjalan';
 
-              <div className="flex gap-2 mt-4 pt-4 border-t border-slate-100">
-                <button onClick={() => handleConfirmArrival(dp.name)} className="flex-1 py-2 bg-emerald-50 text-emerald-600 hover:bg-emerald-100 font-bold text-xs rounded-xl transition-colors border border-emerald-200">
-                  Konfirmasi Kedatangan
-                </button>
-                <button onClick={() => handleUploadResi(dp.name)} className="flex-1 py-2 bg-blue-50 text-blue-600 hover:bg-blue-100 font-bold text-xs rounded-xl transition-colors border border-blue-200">
-                  Upload Resi/Offline
-                </button>
-              </div>
-            </div>
-          ))}
-        </div>
+              if (!isExpired) {
+                const diffHrs = Math.floor(diffMs / (1000 * 60 * 60));
+                const diffDays = Math.floor(diffHrs / 24);
+                if (diffDays > 0) expireText = `Sisa: ${diffDays} Hari`;
+                else expireText = `Sisa: ${diffHrs} Jam`;
+              }
+
+              const timeLimitText = booking.dp_type === 'DP_10' ? 'Hangus dalam 24 Jam' : 'Jeda 7 Hari';
+
+              return (
+                <div key={i} className="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 flex flex-col justify-between">
+                  <div>
+                    <div className="flex justify-between items-start mb-2">
+                      <h4 className="font-bold text-slate-800">{booking.tenant?.full_name || 'Penghuni'}</h4>
+                      <span className={`text-[10px] font-bold px-2 py-1 rounded-md ${booking.dp_type === 'DP_10' ? 'bg-rose-100 text-rose-700' : 'bg-orange-100 text-orange-700'}`}>
+                        {booking.dp_type === 'DP_10' ? 'Early Bird (DP 10%)' : 'Booking Aman (DP 25%)'}
+                      </span>
+                    </div>
+                    <p className="text-xs text-slate-500 font-medium">{booking.room?.room_number || `Booking #${booking.id.substring(0, 8)}`}</p>
+                    <div className={`mt-3 flex items-center gap-1 text-xs font-bold w-fit px-2 py-1 rounded-full ${isExpired ? 'text-red-600 bg-red-50' : 'text-rose-600 bg-rose-50'}`}>
+                      <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                      {expireText} ({timeLimitText})
+                    </div>
+                  </div>
+
+                  <div className="flex gap-2 mt-4 pt-4 border-t border-slate-100">
+                    <button onClick={() => handleConfirmArrival(booking.id)} disabled={isExpired} className={`flex-1 py-2 font-bold text-xs rounded-xl transition-colors border ${isExpired ? 'bg-slate-50 text-slate-400 border-slate-200 cursor-not-allowed' : 'bg-emerald-50 text-emerald-600 hover:bg-emerald-100 border-emerald-200'}`}>
+                      Konfirmasi Kedatangan
+                    </button>
+                    <button onClick={() => handleUploadResi(booking.id)} disabled={isExpired} className={`flex-1 py-2 font-bold text-xs rounded-xl transition-colors border ${isExpired ? 'bg-slate-50 text-slate-400 border-slate-200 cursor-not-allowed' : 'bg-blue-50 text-blue-600 hover:bg-blue-100 border-blue-200'}`}>
+                      Upload Resi/Offline
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
       </div>
 {/* Recent Activity */}
       <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-[0_2px_10px_rgba(0,0,0,0.04)]">

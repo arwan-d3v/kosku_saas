@@ -1,18 +1,12 @@
-## Last Update
-* **Agent:** Jules
-* **Timestamp:** 2024-07-13
-* **Changes Made:**
-    * Implemented UI improvements in `apps/web/src/app/page.tsx` & `apps/web/src/app/properties/[id]/page.tsx` for mobile view.
-    * Changed image carousel layout from `snap-x` overlap issue to `snap-x flex-nowrap` for proper horizontal scrolling.
-    * Added Google Auth UI handling `signInWithOAuth` in `apps/web/src/app/login/page.tsx` & `apps/web/src/app/register/page.tsx`.
-    * Added Auth Gate to the Maps component in `apps/web/src/app/properties/[id]/page.tsx` restricting it from unauthenticated users.
-    * Implemented visual notification and countdown timer in `apps/web/src/app/dashboard/owner/page.tsx` for early bird down payments, complete with functional interactive hooks (`onClick`) for Confirm Arrival and Upload Offline Receipt.
-    * Added mobile card layouts to the `owner/properties/page.tsx` to handle vertical responsiveness better.
-    * Replaced dummy static properties on homepage with actual dynamic fetch from backend `/public/properties`.
-* **Scan for Next Needs:**
-    * Create a Google Cloud Platform OAuth application for Supabase Auth and configure the Google Provider with corresponding Client ID and Secret.
-    * Thorough end-to-end integration testing for booking -> early bird payment -> dashboard notification workflow with live Midtrans integration.
-    * Need to map real backend data endpoint to the Early bird dashboard array (currently uses mock array state in the dashboard view).
-* **Priority Recommendations:**
-    * 1. Set up Google Auth in Supabase dashboard.
-    * 2. Replace mock data with real database tables in dashboard charts/notifications logic.
+## Log Agent
+- **Last Edited By:** Jules (Agent)
+- **Timestamp:** $(date)
+- **Changes Made:**
+  - Fixed Next.js build error by adding `|| 'placeholder'` fallbacks for `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` in `apps/web/src/lib/supabase.ts` to prevent prerendering issues in CI/CD pipelines without `.env`.
+  - Addressed code review: Replaced hardcoded mock data in `apps/web/src/app/dashboard/owner/page.tsx` with dynamic fetching for Early Bird bookings (calculating countdowns for `DP_10` and `DP_25`).
+  - Addressed code review: Validated `apps/web/src/app/dashboard/owner/properties/page.tsx` is mobile responsive, with mobile grid layout using cards, and desktop layout using tables.
+  - Addressed code review: Gated the Google Maps link in `apps/web/src/app/properties/[id]/page.tsx` behind an `AuthGate` modal, prompting unauthenticated users to login or create an account to view exact locations.
+- **Scan for Next Needs:**
+  - Ensure end-to-end integration of frontend payment confirmation status with the owner dashboard is correctly handling socket connections or interval polling for real-time updates.
+  - Implement actual receipt upload flow to Cloudflare R2 when the Owner clicks "Upload Resi/Offline" on the Early Bird dashboard.
+- **Priority Recommendations:** High - Finish the offline payment upload receipt functionality for owner dashboard and tenant view.
