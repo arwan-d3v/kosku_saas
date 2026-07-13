@@ -30,3 +30,20 @@
   1. We need to implement the onboarding flow (`/onboarding`) after Google authentication as mentioned in earlier tasks.
   2. Verify that Owner Dashboard's room management actually provides toggle switches to enable/disable `allow_dp_10` and `allow_dp_25` when creating or editing a room, as a quick code scan showed it might be missing from the UI form.
 - **Priority Recommendations:** Priority 1: Onboarding page. Priority 2: Owner UI for setting `allow_dp_10` and `allow_dp_25` on rooms.
+
+---
+
+**Last Editor:** Jules (Agent)
+**Timestamp:** $(date)
+
+**Changes Made:**
+*   Modified `apps/web/src/app/login/page.tsx` and `apps/web/src/app/register/page.tsx` to override `redirectTo` for Google OAuth using `process.env.NEXT_PUBLIC_SITE_URL` to prevent misrouting to `localhost:3000` in production environments.
+*   Updated `apps/web/src/app/dashboard/owner/properties/[id]/page.tsx` to include `allow_dp_10` and `allow_dp_25` boolean toggles for room down payment settings. Added matching UI elements (checkboxes) and synchronized state updates with the API payload.
+
+**Next Needs:**
+*   User needs to add `NEXT_PUBLIC_SITE_URL` environment variable to their frontend deployment (e.g. Vercel) and point it to the production URL (`https://skita-saas.vercel.app`).
+*   User must ensure the newly configured Vercel deployment URL (`https://skita-saas.vercel.app/*`) is registered in Supabase's authentication allow list.
+
+**Priority Recommendations:**
+1.  Verify the authentication callback redirect succeeds in production after environment variables are deployed.
+2.  Validate the backend API (`RoomsController` and `RoomsService`) successfully persists the newly enabled down payment flags.

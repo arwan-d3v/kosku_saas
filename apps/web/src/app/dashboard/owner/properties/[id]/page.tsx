@@ -29,6 +29,8 @@ export default function PropertyDetailsPage({ params }: { params: Promise<{ id: 
     price_per_month: '', 
     status: true,
     facilities: [] as string[],
+    allow_dp_10: false,
+    allow_dp_25: false,
     images: [] as string[]
   });
   const [submitting, setSubmitting] = useState(false);
@@ -60,7 +62,7 @@ export default function PropertyDetailsPage({ params }: { params: Promise<{ id: 
   const openAddModal = () => {
     setEditMode(false);
     setEditingRoomId(null);
-    setFormData({ room_number: '', price_per_month: '', status: true, facilities: [], images: [] });
+    setFormData({ room_number: '', price_per_month: '', status: true, facilities: [], allow_dp_10: false, allow_dp_25: false, images: [] });
     setIsModalOpen(true);
   };
 
@@ -72,6 +74,8 @@ export default function PropertyDetailsPage({ params }: { params: Promise<{ id: 
       price_per_month: room.price_per_month.toString(),
       status: room.is_available,
       facilities: room.facilities || [],
+      allow_dp_10: room.allow_dp_10 || false,
+      allow_dp_25: room.allow_dp_25 || false,
       images: room.images || []
     });
     setIsModalOpen(true);
@@ -140,7 +144,9 @@ export default function PropertyDetailsPage({ params }: { params: Promise<{ id: 
         price_per_month: parseInt(formData.price_per_month.replace(/\D/g, '') || '0', 10),
         status: formData.status,
         facilities: formData.facilities,
-        images: formData.images
+        images: formData.images,
+        allow_dp_10: formData.allow_dp_10,
+        allow_dp_25: formData.allow_dp_25
       };
 
       if (editMode && editingRoomId) {
@@ -470,6 +476,32 @@ export default function PropertyDetailsPage({ params }: { params: Promise<{ id: 
 
                 <div>
                   <label className="block text-slate-600 font-bold text-sm mb-2">Status Ketersediaan</label>
+
+                  <div className="mb-6">
+                    <label className="block text-slate-600 font-bold text-sm mb-3">Pengaturan Uang Muka (DP)</label>
+                    <div className="flex gap-4 flex-wrap">
+                      <label className="flex items-center gap-2 cursor-pointer bg-slate-50 px-4 py-2 rounded-xl border border-slate-200 hover:border-indigo-200 transition-colors">
+                        <input
+                          type="checkbox"
+                          checked={formData.allow_dp_10}
+                          onChange={(e) => setFormData({...formData, allow_dp_10: e.target.checked})}
+                          className="w-4 h-4 text-indigo-600 rounded focus:ring-indigo-500 cursor-pointer"
+                        />
+                        <span className="font-bold text-slate-700 text-sm">Izinkan DP 10%</span>
+                      </label>
+                      <label className="flex items-center gap-2 cursor-pointer bg-slate-50 px-4 py-2 rounded-xl border border-slate-200 hover:border-indigo-200 transition-colors">
+                        <input
+                          type="checkbox"
+                          checked={formData.allow_dp_25}
+                          onChange={(e) => setFormData({...formData, allow_dp_25: e.target.checked})}
+                          className="w-4 h-4 text-indigo-600 rounded focus:ring-indigo-500 cursor-pointer"
+                        />
+                        <span className="font-bold text-slate-700 text-sm">Izinkan DP 25%</span>
+                      </label>
+                    </div>
+                  </div>
+
+                  <label className="block text-slate-600 font-bold text-sm mb-3 mt-4">Status Kamar</label>
                   <div className="flex gap-4 mt-2">
                     <label className="flex items-center gap-2 cursor-pointer bg-emerald-50 px-4 py-2 rounded-xl border border-emerald-100 transition-colors">
                       <input 

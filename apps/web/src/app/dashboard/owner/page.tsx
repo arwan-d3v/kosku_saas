@@ -200,7 +200,6 @@ export default function OwnerDashboard() {
                 else expireText = `Sisa: ${diffHrs} Jam`;
               }
 
-              // const timeLimitText = booking.dp_type === 'DP_10' ? 'Hangus dalam 24 Jam' : 'Jeda 7 Hari';
 
               return (
                 <div key={i} className="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 flex flex-col justify-between">
