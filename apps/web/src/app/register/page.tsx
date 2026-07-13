@@ -31,6 +31,20 @@ export default function RegisterPage() {
   };
 
 
+  const handleGoogleLogin = async () => {
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/search`
+        }
+      });
+      if (error) throw error;
+    } catch (err: any) {
+      setErrorMsg(err.message || 'Terjadi kesalahan saat masuk dengan Google.');
+    }
+  };
+
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);

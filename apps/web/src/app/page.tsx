@@ -4,10 +4,13 @@ import React, { useState, useEffect } from 'react';
 import { Search, Home, User, ShieldCheck, MapPin, Building, Bookmark, History, CreditCard, HeadphonesIcon, Menu } from 'lucide-react';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
+import { useRouter } from 'next/navigation';
 
 export default function LandingPage() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [role, setRole] = useState<string | null>(null);
+  const [properties, setProperties] = useState<any[]>([]);
+  const router = useRouter();
 
   useEffect(() => {
     const checkUser = async () => {
@@ -26,6 +29,20 @@ export default function LandingPage() {
       }
     };
     checkUser();
+
+    const fetchProperties = async () => {
+      try {
+        const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
+        const response = await fetch(`${API_BASE_URL}/public/properties`);
+        if (response.ok) {
+          const data = await response.json();
+          setProperties(data.data || []);
+        }
+      } catch (error) {
+        console.error("Failed to fetch properties", error);
+      }
+    };
+    fetchProperties();
   }, []);
 
   const menuItems = [
@@ -155,33 +172,42 @@ export default function LandingPage() {
         </div>
 
         {/* Property Horizontal List */}
-        <div className="flex gap-4 overflow-x-auto pb-6 pt-2 hide-scrollbar snap-x">
-          {[1, 2, 3, 4, 5, 6].map((_, idx) => (
-            <div key={idx} className="min-w-[220px] md:min-w-[280px] bg-white rounded-2xl shadow-[0_2px_10px_rgba(0,0,0,0.04)] border border-slate-100 overflow-hidden snap-start group cursor-pointer hover:shadow-lg transition-shadow">
+        <div className="flex gap-4 overflow-x-auto pb-6 pt-2 hide-scrollbar snap-x flex-nowrap w-full">
+          {properties.length > 0 ? properties.slice(0, 6).map((prop, idx) => {
+            const hasImage = prop.images && prop.images.length > 0;
+            const price = prop.rooms && prop.rooms.length > 0
+                ? Math.min(...prop.rooms.map((r: any) => Number(r.price_per_month)))
+                : 0;
+
+            return (
+            <div key={idx} onClick={() => router.push(`/properties/${prop.id}`)} className="flex-none w-[220px] md:w-[280px] bg-white rounded-2xl shadow-[0_2px_10px_rgba(0,0,0,0.04)] border border-slate-100 overflow-hidden snap-start group cursor-pointer hover:shadow-lg transition-shadow">
               <div className="h-32 md:h-40 bg-slate-200 relative overflow-hidden">
-                {/* Simulated Image Background */}
-                <div className="absolute inset-0 bg-gradient-to-br from-blue-300 to-teal-200 group-hover:scale-105 transition-transform duration-500"></div>
-                <div className="absolute top-2 left-2 bg-red-500 text-white text-[10px] font-bold px-2 py-1 rounded">Sisa 1 kamar</div>
+                {hasImage ? (
+                  <img src={prop.images[0]} alt={prop.name} className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                ) : (
+                  <div className="absolute inset-0 bg-gradient-to-br from-blue-300 to-teal-200 group-hover:scale-105 transition-transform duration-500"></div>
+                )}
+                <div className="absolute top-2 left-2 bg-blue-500 text-white text-[10px] font-bold px-2 py-1 rounded">{prop.type || 'Campur'}</div>
               </div>
               <div className="p-3 md:p-4">
-                <h4 className="font-bold text-sm md:text-base text-slate-800 mb-1 line-clamp-1">Kos Andalan Eksekutif {idx+1}</h4>
+                <h4 className="font-bold text-sm md:text-base text-slate-800 mb-1 line-clamp-1">{prop.name}</h4>
                 <div className="flex items-center gap-1 text-[10px] md:text-xs text-slate-500 mb-3">
                   <MapPin size={12} className="text-slate-400" />
-                  <span>Cidadap, Bandung</span>
+                  <span className="line-clamp-1">{prop.address}</span>
                 </div>
-                <div className="flex items-center gap-1 mb-3">
-                  <span className="text-xs font-bold text-yellow-500">4.7/5</span>
-                  <span className="text-[10px] text-slate-400">(2,857)</span>
-                </div>
-                <div className="flex items-end justify-between border-t border-slate-100 pt-3">
+                <div className="flex items-end justify-between border-t border-slate-100 pt-3 mt-3">
                   <div>
-                    <p className="text-[10px] md:text-xs text-slate-400 line-through">Rp 1.500.000</p>
-                    <p className="text-sm md:text-base font-black text-orange-600">Rp 1.200.000</p>
+                    <p className="text-sm md:text-base font-black text-orange-600">
+                      {new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(price)}
+                    </p>
                   </div>
                   <span className="text-[9px] md:text-[10px] text-slate-400 mb-0.5">/ bln</span>
                 </div>
               </div>
             </div>
+            );
+          }) : [1, 2, 3].map((_, idx) => (
+             <div key={`skeleton-${idx}`} className="flex-none w-[220px] md:w-[280px] bg-slate-100 animate-pulse rounded-2xl h-[240px] snap-start border border-slate-200"></div>
           ))}
         </div>
       </div>
