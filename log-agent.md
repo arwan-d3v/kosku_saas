@@ -19,3 +19,14 @@
 - **Scan for Next Needs:**
   1. The user previously mentioned an issue regarding an onboarding flow missing after authentication. Currently, both login and registration Google OAuth callbacks are pointing to `/search`. The implementation of the missing onboarding page (`/onboarding`) might be the next immediate priority.
 - **Priority Recommendations:** Follow up with the user on implementing the `onboarding` page after authentication success, as they reported it missing/returning to localhost.
+
+- **Agent:** Jules
+- **Timestamp:** 2026-07-13 13:00:00
+- **Changes Made:**
+  1. Created a new reusable `CountdownTimer` component (`apps/web/src/components/CountdownTimer.tsx`) with a modern, box-based UI for displaying remaining time (hours, minutes, seconds).
+  2. Updated the Tenant Dashboard (`apps/web/src/app/dashboard/tenant/page.tsx`) to use the new `CountdownTimer` for tracking DP expiration.
+  3. Updated the Owner Dashboard (`apps/web/src/app/dashboard/owner/page.tsx`) to integrate the `CountdownTimer` into the Early Bird (DP 10%) and Booking Aman (DP 25%) transaction cards, allowing owners to view live countdowns.
+- **Scan for Next Needs:**
+  1. We need to implement the onboarding flow (`/onboarding`) after Google authentication as mentioned in earlier tasks.
+  2. Verify that Owner Dashboard's room management actually provides toggle switches to enable/disable `allow_dp_10` and `allow_dp_25` when creating or editing a room, as a quick code scan showed it might be missing from the UI form.
+- **Priority Recommendations:** Priority 1: Onboarding page. Priority 2: Owner UI for setting `allow_dp_10` and `allow_dp_25` on rooms.
