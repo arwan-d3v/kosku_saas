@@ -1,4 +1,12 @@
-import { Controller, Get, Post, Body, Param, UseGuards, Request } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Param,
+  UseGuards,
+  Request,
+} from '@nestjs/common';
 import { BookingsService } from './bookings.service';
 import { SupabaseAuthGuard } from '../auth/supabase-auth.guard';
 
@@ -10,9 +18,21 @@ export class BookingsController {
   @Post()
   async createBooking(
     @Request() req,
-    @Body() body: { roomId: string; startDate: string; endDate?: string }
+    @Body()
+    body: {
+      roomId: string;
+      startDate: string;
+      endDate?: string;
+      paymentType?: 'FULL' | 'DP_10' | 'DP_25';
+    },
   ) {
-    return this.bookingsService.createBooking(req.user.id, body.roomId, body.startDate, body.endDate);
+    return this.bookingsService.createBooking(
+      req.user.id,
+      body.roomId,
+      body.startDate,
+      body.endDate,
+      body.paymentType,
+    );
   }
 
   @Get()

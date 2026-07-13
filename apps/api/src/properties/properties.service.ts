@@ -5,7 +5,15 @@ import { SupabaseService } from '../common/supabase/supabase.service';
 export class PropertiesService {
   constructor(private readonly supabaseService: SupabaseService) {}
 
-  async createProperty(userId: string, data: { name: string; address: string; description?: string; facilities?: string[] }) {
+  async createProperty(
+    userId: string,
+    data: {
+      name: string;
+      address: string;
+      description?: string;
+      facilities?: string[];
+    },
+  ) {
     const supabase = this.supabaseService.getClient();
 
     const { data: property, error } = await supabase
@@ -16,7 +24,7 @@ export class PropertiesService {
         address: data.address,
         description: data.description || '',
         city: 'Unknown', // Adding a default city as it is required in schema, can be modified later
-        facilities: data.facilities || []
+        facilities: data.facilities || [],
       })
       .select()
       .single();
@@ -65,7 +73,11 @@ export class PropertiesService {
     return property;
   }
 
-  async uploadPropertyImage(userId: string, propertyId: string, file: Express.Multer.File) {
+  async uploadPropertyImage(
+    userId: string,
+    propertyId: string,
+    file: Express.Multer.File,
+  ) {
     const supabase = this.supabaseService.getClient();
 
     // Verify ownership
@@ -85,7 +97,11 @@ export class PropertiesService {
 
     // Upload to Supabase Storage
     const fileName = `${propertyId}/${Date.now()}-${file.originalname.replace(/\s+/g, '_')}`;
-    const publicUrl = await this.supabaseService.uploadFile('property_images', fileName, file);
+    const publicUrl = await this.supabaseService.uploadFile(
+      'property_images',
+      fileName,
+      file,
+    );
 
     // Update property images array
     const currentImages = property.images || [];
@@ -95,7 +111,9 @@ export class PropertiesService {
       .eq('id', propertyId);
 
     if (updateError) {
-      throw new InternalServerErrorException('Failed to update property images');
+      throw new InternalServerErrorException(
+        'Failed to update property images',
+      );
     }
 
     return { url: publicUrl };
@@ -105,8 +123,7 @@ export class PropertiesService {
     const supabase = this.supabaseService.getClient();
 
     // Query properties and include their rooms using Supabase join syntax
-    const { data: properties, error } = await supabase
-      .from('properties')
+    const { data: properties, error } = await supabase.from('properties')
       .select(`
         *,
         rooms (*)
@@ -124,10 +141,12 @@ export class PropertiesService {
 
     const { data: property, error } = await supabase
       .from('properties')
-      .select(`
+      .select(
+        `
         *,
         rooms (*)
-      `)
+      `,
+      )
       .eq('id', propertyId)
       .single();
 
@@ -142,14 +161,25 @@ export class PropertiesService {
     return property;
   }
 
-  async updateProperty(userId: string, propertyId: string, data: { name?: string; address?: string; description?: string; facilities?: string[] }) {
+  async updateProperty(
+    userId: string,
+    propertyId: string,
+    data: {
+      name?: string;
+      address?: string;
+      description?: string;
+      facilities?: string[];
+    },
+  ) {
     const supabase = this.supabaseService.getClient();
 
     const updatePayload: any = {};
     if (data.name !== undefined) updatePayload.name = data.name;
     if (data.address !== undefined) updatePayload.address = data.address;
-    if (data.description !== undefined) updatePayload.description = data.description;
-    if (data.facilities !== undefined) updatePayload.facilities = data.facilities;
+    if (data.description !== undefined)
+      updatePayload.description = data.description;
+    if (data.facilities !== undefined)
+      updatePayload.facilities = data.facilities;
 
     const { data: property, error } = await supabase
       .from('properties')

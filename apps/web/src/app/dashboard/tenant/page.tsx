@@ -13,12 +13,47 @@ import {
   CheckCircle, 
   X, 
   ArrowRight,
-  User
+  User,
+  Clock
 } from 'lucide-react';
 import { fetchWithAuth } from '@/lib/api-client';
 import { supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+
+
+const CountdownTimer = ({ expiresAt }: { expiresAt: string }) => {
+  const [timeLeft, setTimeLeft] = useState('');
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      const now = new Date().getTime();
+      const expiry = new Date(expiresAt).getTime();
+      const distance = expiry - now;
+
+      if (distance < 0) {
+        clearInterval(timer);
+        setTimeLeft('Expired');
+        return;
+      }
+
+      const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+      const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+      const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+      setTimeLeft(`${hours}j ${minutes}m ${seconds}d`);
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [expiresAt]);
+
+  if (timeLeft === 'Expired') {
+    return <span className="text-rose-500 font-bold flex items-center gap-1"><Clock size={12}/> Waktu Habis (Hangus)</span>;
+  }
+
+  return <span className="text-amber-600 font-bold flex items-center gap-1"><Clock size={12}/> ${timeLeft}</span>;
+};
+
 
 export default function TenantDashboard() {
   const [bookings, setBookings] = useState<any[]>([]);
@@ -190,7 +225,13 @@ export default function TenantDashboard() {
                   <div className="flex flex-col md:items-end justify-between gap-4 md:text-right border-t md:border-t-0 pt-4 md:pt-0 border-slate-100">
                     <div>
                       <span className="text-[10px] text-slate-400 uppercase tracking-wider font-bold">Total Pembayaran</span>
-                      <p className="text-base font-black text-slate-800">{formatRupiah(Number(booking.total_price))}</p>
+                      <p className="text-base font-black text-slate-800">
+                        {booking.payment_type !== 'FULL' && !isPaid ? formatRupiah(Number(booking.dp_amount)) : formatRupiah(Number(booking.total_price))}
+                        {booking.payment_type !== 'FULL' && !isPaid && <span className="text-xs text-slate-400 font-normal ml-1">(DP)</span>}
+                      </p>
+                      {booking.payment_type !== 'FULL' && !isPaid && booking.dp_expires_at && (
+                        <div className="mt-1 flex justify-end text-xs"><CountdownTimer expiresAt={booking.dp_expires_at} /></div>
+                      )}
                     </div>
 
                     <div className="flex items-center gap-3">
@@ -246,7 +287,7 @@ export default function TenantDashboard() {
 
                     <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-0.5">Total Tagihan</span>
                     <span className="text-lg font-black text-indigo-300">
-                      {formatRupiah(Number(selectedBooking.total_price))}
+                      {selectedBooking.payment_type !== 'FULL' && selectedBooking.status !== 'PAID' ? formatRupiah(Number(selectedBooking.dp_amount)) : formatRupiah(Number(selectedBooking.total_price))}
                     </span>
                   </div>
 

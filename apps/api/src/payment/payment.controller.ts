@@ -10,16 +10,13 @@ export class PaymentController {
   @Post('checkout')
   async createCheckoutToken(
     @Request() req,
-    @Body() body: { bookingId: string }
+    @Body() body: { bookingId: string },
   ) {
     return this.paymentService.createCheckoutToken(body.bookingId, req.user.id);
   }
 
   @Post('confirm')
-  async confirmPayment(
-    @Request() req,
-    @Body() body: { bookingId: string }
-  ) {
+  async confirmPayment(@Request() req, @Body() body: { bookingId: string }) {
     return this.paymentService.confirmPayment(body.bookingId, req.user.id);
   }
 }

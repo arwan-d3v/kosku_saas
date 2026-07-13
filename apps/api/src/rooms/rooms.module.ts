@@ -7,6 +7,6 @@ import { SupabaseModule } from '../common/supabase/supabase.module';
   imports: [SupabaseModule],
   controllers: [RoomsController],
   providers: [RoomsService],
-  exports: [RoomsService]
+  exports: [RoomsService],
 })
 export class RoomsModule {}

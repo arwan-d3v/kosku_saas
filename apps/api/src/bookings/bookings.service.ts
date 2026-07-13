@@ -1,11 +1,22 @@
-import { Injectable, InternalServerErrorException, BadRequestException, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  InternalServerErrorException,
+  BadRequestException,
+  NotFoundException,
+} from '@nestjs/common';
 import { SupabaseService } from '../common/supabase/supabase.service';
 
 @Injectable()
 export class BookingsService {
   constructor(private readonly supabaseService: SupabaseService) {}
 
-  async createBooking(userId: string, roomId: string, startDate: string, endDate?: string) {
+  async createBooking(
+    userId: string,
+    roomId: string,
+    startDate: string,
+    endDate?: string,
+    paymentType: 'FULL' | 'DP_10' | 'DP_25' = 'FULL',
+  ) {
     const supabase = this.supabaseService.getClient();
 
     // 1. Get room details and verify availability
@@ -20,7 +31,9 @@ export class BookingsService {
     }
 
     if (!room.is_available) {
-      throw new BadRequestException('Kamar ini sudah terisi atau tidak tersedia');
+      throw new BadRequestException(
+        'Kamar ini sudah terisi atau tidak tersedia',
+      );
     }
 
     // 2. Calculate price (minimum 1 month)
@@ -32,10 +45,29 @@ export class BookingsService {
       const end = new Date(endDate);
       const diffTime = Math.abs(end.getTime() - start.getTime());
       const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-      
+
       // Rough monthly calculation
       const months = Math.max(1, Math.round(diffDays / 30));
       totalPrice = pricePerMonth * months;
+    }
+
+    let dpAmount: number | null = null;
+    let dpExpiresAt: string | null = null;
+
+    if (paymentType === 'DP_10') {
+      if (!room.allow_dp_10)
+        throw new BadRequestException('Kamar ini tidak menerima DP 10%');
+      dpAmount = totalPrice * 0.1;
+      const expireDate = new Date();
+      expireDate.setHours(expireDate.getHours() + 24);
+      dpExpiresAt = expireDate.toISOString();
+    } else if (paymentType === 'DP_25') {
+      if (!room.allow_dp_25)
+        throw new BadRequestException('Kamar ini tidak menerima DP 25%');
+      dpAmount = totalPrice * 0.25;
+      const expireDate = new Date();
+      expireDate.setDate(expireDate.getDate() + 7);
+      dpExpiresAt = expireDate.toISOString();
     }
 
     // 3. Create booking record
@@ -47,13 +79,18 @@ export class BookingsService {
         start_date: startDate,
         end_date: endDate || null,
         total_price: totalPrice,
-        status: 'PENDING'
+        status: 'PENDING',
+        payment_type: paymentType,
+        dp_amount: dpAmount,
+        dp_expires_at: dpExpiresAt,
       })
       .select('*, rooms(*, properties(*))')
       .single();
 
     if (bookingError) {
-      throw new InternalServerErrorException('Gagal membuat booking: ' + bookingError.message);
+      throw new InternalServerErrorException(
+        'Gagal membuat booking: ' + bookingError.message,
+      );
     }
 
     return booking;
@@ -77,7 +114,9 @@ export class BookingsService {
       // Owner: Get bookings of rooms belonging to their properties
       const { data: bookings, error: bookingsError } = await supabase
         .from('bookings')
-        .select('*, rooms!inner(*, properties!inner(*)), customer:users!bookings_customer_id_fkey(*)')
+        .select(
+          '*, rooms!inner(*, properties!inner(*)), customer:users!bookings_customer_id_fkey(*)',
+        )
         .eq('rooms.properties.owner_id', userId);
 
       if (bookingsError) {
@@ -112,7 +151,10 @@ export class BookingsService {
     }
 
     // Verify permission
-    if (booking.customer_id !== userId && booking.rooms.properties.owner_id !== userId) {
+    if (
+      booking.customer_id !== userId &&
+      booking.rooms.properties.owner_id !== userId
+    ) {
       throw new BadRequestException('Akses ditolak untuk data booking ini');
     }
 

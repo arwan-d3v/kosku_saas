@@ -1,11 +1,28 @@
-import { Injectable, InternalServerErrorException, UnauthorizedException, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  InternalServerErrorException,
+  UnauthorizedException,
+  NotFoundException,
+} from '@nestjs/common';
 import { SupabaseService } from '../common/supabase/supabase.service';
 
 @Injectable()
 export class RoomsService {
   constructor(private readonly supabaseService: SupabaseService) {}
 
-  async createRoom(userId: string, propertyId: string, data: { room_number: string; price_per_month: number; status?: boolean; facilities?: string[]; images?: string[] }) {
+  async createRoom(
+    userId: string,
+    propertyId: string,
+    data: {
+      room_number: string;
+      price_per_month: number;
+      status?: boolean;
+      facilities?: string[];
+      images?: string[];
+      allow_dp_10?: boolean;
+      allow_dp_25?: boolean;
+    },
+  ) {
     const supabase = this.supabaseService.getClient();
 
     // 1. Verify property ownership
@@ -20,7 +37,9 @@ export class RoomsService {
     }
 
     if (property.owner_id !== userId) {
-      throw new UnauthorizedException('You are not authorized to add rooms to this property');
+      throw new UnauthorizedException(
+        'You are not authorized to add rooms to this property',
+      );
     }
 
     // 2. Create Room
@@ -32,7 +51,9 @@ export class RoomsService {
         price_per_month: data.price_per_month,
         is_available: data.status !== undefined ? data.status : true,
         facilities: data.facilities || [],
-        images: data.images || []
+        images: data.images || [],
+        allow_dp_10: data.allow_dp_10 || false,
+        allow_dp_25: data.allow_dp_25 || false,
       })
       .select()
       .single();
@@ -59,7 +80,20 @@ export class RoomsService {
     return rooms;
   }
 
-  async updateRoom(roomId: string, propertyId: string, userId: string, data: { room_number?: string; price_per_month?: number; status?: boolean; facilities?: string[]; images?: string[] }) {
+  async updateRoom(
+    roomId: string,
+    propertyId: string,
+    userId: string,
+    data: {
+      room_number?: string;
+      price_per_month?: number;
+      status?: boolean;
+      facilities?: string[];
+      images?: string[];
+      allow_dp_10?: boolean;
+      allow_dp_25?: boolean;
+    },
+  ) {
     const supabase = this.supabaseService.getClient();
 
     // Verify property ownership
@@ -74,15 +108,20 @@ export class RoomsService {
     }
 
     if (property.owner_id !== userId) {
-      throw new UnauthorizedException('You are not authorized to update rooms in this property');
+      throw new UnauthorizedException(
+        'You are not authorized to update rooms in this property',
+      );
     }
 
     const updates: any = {};
     if (data.room_number !== undefined) updates.room_number = data.room_number;
-    if (data.price_per_month !== undefined) updates.price_per_month = data.price_per_month;
+    if (data.price_per_month !== undefined)
+      updates.price_per_month = data.price_per_month;
     if (data.status !== undefined) updates.is_available = data.status;
     if (data.facilities !== undefined) updates.facilities = data.facilities;
     if (data.images !== undefined) updates.images = data.images;
+    if (data.allow_dp_10 !== undefined) updates.allow_dp_10 = data.allow_dp_10;
+    if (data.allow_dp_25 !== undefined) updates.allow_dp_25 = data.allow_dp_25;
 
     const { data: room, error: roomError } = await supabase
       .from('rooms')
@@ -114,7 +153,9 @@ export class RoomsService {
     }
 
     if (property.owner_id !== userId) {
-      throw new UnauthorizedException('You are not authorized to delete rooms in this property');
+      throw new UnauthorizedException(
+        'You are not authorized to delete rooms in this property',
+      );
     }
 
     const { error } = await supabase
@@ -130,7 +171,12 @@ export class RoomsService {
     return { success: true, message: 'Room deleted successfully' };
   }
 
-  async uploadRoomImage(userId: string, propertyId: string, roomId: string, file: Express.Multer.File) {
+  async uploadRoomImage(
+    userId: string,
+    propertyId: string,
+    roomId: string,
+    file: Express.Multer.File,
+  ) {
     const supabase = this.supabaseService.getClient();
 
     // Verify property ownership
@@ -162,7 +208,11 @@ export class RoomsService {
 
     // Upload to Supabase Storage
     const fileName = `${roomId}/${Date.now()}-${file.originalname.replace(/\s+/g, '_')}`;
-    const publicUrl = await this.supabaseService.uploadFile('room_images', fileName, file);
+    const publicUrl = await this.supabaseService.uploadFile(
+      'room_images',
+      fileName,
+      file,
+    );
 
     // Update room images array
     const currentImages = room.images || [];

@@ -1,4 +1,9 @@
-import { Injectable, NotFoundException, BadRequestException, InternalServerErrorException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+  InternalServerErrorException,
+} from '@nestjs/common';
 import { SupabaseService } from '../common/supabase/supabase.service';
 
 @Injectable()
@@ -34,7 +39,9 @@ export class PaymentService {
       .eq('id', bookingId);
 
     if (updateError) {
-      throw new InternalServerErrorException('Gagal memperbarui token pembayaran');
+      throw new InternalServerErrorException(
+        'Gagal memperbarui token pembayaran',
+      );
     }
 
     return { token: mockToken };
@@ -66,7 +73,9 @@ export class PaymentService {
       .eq('id', bookingId);
 
     if (updateBookingError) {
-      throw new InternalServerErrorException('Gagal memperbarui status pembayaran: ' + updateBookingError.message);
+      throw new InternalServerErrorException(
+        'Gagal memperbarui status pembayaran: ' + updateBookingError.message,
+      );
     }
 
     // 3. Update room status to occupied (is_available = false)
@@ -76,7 +85,9 @@ export class PaymentService {
       .eq('id', booking.room_id);
 
     if (updateRoomError) {
-      throw new InternalServerErrorException('Gagal memperbarui ketersediaan kamar: ' + updateRoomError.message);
+      throw new InternalServerErrorException(
+        'Gagal memperbarui ketersediaan kamar: ' + updateRoomError.message,
+      );
     }
 
     return { success: true, message: 'Pembayaran berhasil dikonfirmasi' };

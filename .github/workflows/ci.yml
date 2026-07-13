@@ -14,18 +14,18 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Setup Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: 'npm'
-          cache-dependency-path: apps/web/package-lock.json
+          cache-dependency-path: apps/**/package.json
 
       - name: Install Web Dependencies
         working-directory: apps/web
-        run: npm ci
+        run: npm install
 
       - name: Lint Web
         working-directory: apps/web
@@ -44,18 +44,18 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Setup Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: 'npm'
-          cache-dependency-path: apps/api/package-lock.json
+          cache-dependency-path: apps/**/package.json
 
       - name: Install API Dependencies
         working-directory: apps/api
-        run: npm ci
+        run: npm install
 
       - name: Lint API
         working-directory: apps/api

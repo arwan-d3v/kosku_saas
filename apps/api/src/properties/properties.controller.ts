@@ -1,4 +1,16 @@
-import { Controller, Post, Get, Patch, Delete, Body, Req, UseGuards, Param, UseInterceptors, UploadedFile } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Get,
+  Patch,
+  Delete,
+  Body,
+  Req,
+  UseGuards,
+  Param,
+  UseInterceptors,
+  UploadedFile,
+} from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { PropertiesService } from './properties.service';
 import { SupabaseAuthGuard } from '../auth/supabase-auth.guard';
@@ -9,7 +21,16 @@ export class PropertiesController {
   constructor(private readonly propertiesService: PropertiesService) {}
 
   @Post()
-  async createProperty(@Req() request: any, @Body() body: { name: string; address: string; description?: string; facilities?: string[] }) {
+  async createProperty(
+    @Req() request: any,
+    @Body()
+    body: {
+      name: string;
+      address: string;
+      description?: string;
+      facilities?: string[];
+    },
+  ) {
     const userId = request.user.id;
     return this.propertiesService.createProperty(userId, body);
   }
@@ -28,9 +49,15 @@ export class PropertiesController {
 
   @Patch(':id')
   async updateProperty(
-    @Req() request: any, 
-    @Param('id') propertyId: string, 
-    @Body() body: { name?: string; address?: string; description?: string; facilities?: string[] }
+    @Req() request: any,
+    @Param('id') propertyId: string,
+    @Body()
+    body: {
+      name?: string;
+      address?: string;
+      description?: string;
+      facilities?: string[];
+    },
   ) {
     const userId = request.user.id;
     return this.propertiesService.updateProperty(userId, propertyId, body);

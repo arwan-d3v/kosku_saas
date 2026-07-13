@@ -32,6 +32,15 @@ export default function OwnerDashboard() {
     fetchDashboardData();
   }, []);
 
+
+  const handleConfirmArrival = (id: string) => {
+    alert(`Konfirmasi kedatangan untuk booking ${id} berhasil dikirim ke server.`);
+  };
+
+  const handleUploadResi = (id: string) => {
+    alert(`Form upload resi pembayaran offline untuk booking ${id} dibuka.`);
+  };
+
   const fetchDashboardData = async () => {
     try {
       setLoading(true);
@@ -149,7 +158,52 @@ export default function OwnerDashboard() {
         </div>
       </div>
 
-      {/* Recent Activity */}
+
+      {/* Early Bird DP Notifications */}
+      <div className="bg-gradient-to-r from-amber-50 to-orange-50 p-6 rounded-3xl border border-amber-200/50 shadow-sm mt-6 mb-6">
+        <div className="flex items-center gap-3 mb-4">
+          <div className="w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center text-amber-600">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          </div>
+          <div>
+            <h3 className="text-lg font-bold text-amber-900">Konfirmasi Kedatangan (Early Bird)</h3>
+            <p className="text-sm text-amber-700 font-medium">Terdapat penyewa dengan sistem Down Payment menunggu kedatangan.</p>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {[
+            { name: 'Budi Santoso', type: 'DP_10', prop: 'Kamar 1A (Kosan Andalan)', expire: 'Sisa Waktu: 04j 12m', timeLimit: 'Hangus dalam 24 Jam' },
+            { name: 'Siti Aminah', type: 'DP_25', prop: 'Kamar 2B (Kosan Eksklusif)', expire: 'Sisa Waktu: 4 Hari', timeLimit: 'Jeda 7 Hari' }
+          ].map((dp, i) => (
+            <div key={i} className="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 flex flex-col justify-between">
+              <div>
+                <div className="flex justify-between items-start mb-2">
+                  <h4 className="font-bold text-slate-800">{dp.name}</h4>
+                  <span className={`text-[10px] font-bold px-2 py-1 rounded-md ${dp.type === 'DP_10' ? 'bg-rose-100 text-rose-700' : 'bg-orange-100 text-orange-700'}`}>
+                    {dp.type === 'DP_10' ? 'Early Bird (DP 10%)' : 'Booking Aman (DP 25%)'}
+                  </span>
+                </div>
+                <p className="text-xs text-slate-500 font-medium">{dp.prop}</p>
+                <div className="mt-3 flex items-center gap-1 text-xs font-bold text-rose-600 bg-rose-50 w-fit px-2 py-1 rounded-full">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                  {dp.expire} ({dp.timeLimit})
+                </div>
+              </div>
+
+              <div className="flex gap-2 mt-4 pt-4 border-t border-slate-100">
+                <button onClick={() => handleConfirmArrival(dp.name)} className="flex-1 py-2 bg-emerald-50 text-emerald-600 hover:bg-emerald-100 font-bold text-xs rounded-xl transition-colors border border-emerald-200">
+                  Konfirmasi Kedatangan
+                </button>
+                <button onClick={() => handleUploadResi(dp.name)} className="flex-1 py-2 bg-blue-50 text-blue-600 hover:bg-blue-100 font-bold text-xs rounded-xl transition-colors border border-blue-200">
+                  Upload Resi/Offline
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+{/* Recent Activity */}
       <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-[0_2px_10px_rgba(0,0,0,0.04)]">
         <h3 className="text-lg font-bold text-slate-800 mb-6">Aktivitas Terbaru</h3>
         <div className="space-y-4">

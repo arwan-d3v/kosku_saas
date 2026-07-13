@@ -10,10 +10,14 @@ export class SupabaseService implements OnModuleInit {
 
   onModuleInit() {
     const url = this.configService.get<string>('SUPABASE_URL');
-    const key = this.configService.get<string>('SUPABASE_SERVICE_ROLE_KEY') || this.configService.get<string>('SUPABASE_ANON_KEY');
+    const key =
+      this.configService.get<string>('SUPABASE_SERVICE_ROLE_KEY') ||
+      this.configService.get<string>('SUPABASE_ANON_KEY');
 
     if (!url || !key) {
-      throw new Error('SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY is not defined');
+      throw new Error(
+        'SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY is not defined',
+      );
     }
 
     this.supabase = createClient(url, key);
@@ -23,8 +27,12 @@ export class SupabaseService implements OnModuleInit {
     return this.supabase;
   }
 
-  async uploadFile(bucket: string, path: string, file: Express.Multer.File): Promise<string> {
-    const { data, error } = await this.supabase.storage
+  async uploadFile(
+    bucket: string,
+    path: string,
+    file: Express.Multer.File,
+  ): Promise<string> {
+    const { error } = await this.supabase.storage
       .from(bucket)
       .upload(path, file.buffer, {
         contentType: file.mimetype,

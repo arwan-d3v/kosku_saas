@@ -8,7 +8,6 @@ import { AuthModule } from '../auth/auth.module';
   imports: [SupabaseModule, AuthModule],
   controllers: [BookingsController],
   providers: [BookingsService],
-  exports: [BookingsService]
+  exports: [BookingsService],
 })
 export class BookingsModule {}
-

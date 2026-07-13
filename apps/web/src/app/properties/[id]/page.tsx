@@ -12,7 +12,8 @@ import {
   Calendar,
   X,
   CreditCard,
-  CheckCircle
+  CheckCircle,
+  Lock
 } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -32,6 +33,7 @@ export default function PublicPropertyDetails({ params }: { params: Promise<{ id
   const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
   const [startDate, setStartDate] = useState('');
   const [durationMonths, setDurationMonths] = useState(1);
+  const [paymentType, setPaymentType] = useState('FULL');
   const [submittingBooking, setSubmittingBooking] = useState(false);
   
   // Payment states
@@ -104,6 +106,10 @@ export default function PublicPropertyDetails({ params }: { params: Promise<{ id
   const textColors = ["text-blue-500", "text-cyan-500", "text-indigo-500", "text-emerald-500", "text-amber-500"];
 
   const handleBookingInit = () => {
+    if (!isAuthenticated) {
+      router.push('/login');
+      return;
+    }
     if (!isAuthenticated) {
       router.push('/login');
       return;
@@ -225,8 +231,10 @@ export default function PublicPropertyDetails({ params }: { params: Promise<{ id
         </div>
         
         <p className="text-slate-500 text-sm font-medium flex items-center gap-1.5 mb-4">
-          <MapPin size={16} className="text-slate-400" />
-          {property.address}, {property.city}
+          <MapPin size={16} className="text-indigo-500" />
+          <a href={`https://maps.google.com/?q=${encodeURIComponent(property.address + ' ' + property.city)}`} target="_blank" rel="noopener noreferrer" className="hover:text-indigo-600 hover:underline transition-all">
+            {property.address}, {property.city}
+          </a>
         </p>
 
         {/* KosLock Badge & Rooms Left */}
@@ -420,6 +428,47 @@ export default function PublicPropertyDetails({ params }: { params: Promise<{ id
                   </div>
                 </div>
 
+
+                <div>
+                  <label className="block text-slate-600 font-bold text-sm mb-2">Pilih Tipe Pembayaran</label>
+                  <div className="space-y-3">
+                    <label className={`flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-all ${paymentType === 'FULL' ? 'border-indigo-500 bg-indigo-50/50' : 'border-slate-200 hover:bg-slate-50'}`}>
+                      <input type="radio" name="paymentType" value="FULL" checked={paymentType === 'FULL'} onChange={() => setPaymentType('FULL')} className="w-4 h-4 text-indigo-600 focus:ring-indigo-500" />
+                      <div>
+                        <p className="font-bold text-sm text-slate-800">Bayar Penuh</p>
+                        <p className="text-xs text-slate-500">Bayar total tagihan sekaligus</p>
+                      </div>
+                    </label>
+
+                    {selectedRoom?.allow_dp_10 && (
+                      <label className={`flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-all ${paymentType === 'DP_10' ? 'border-indigo-500 bg-indigo-50/50' : 'border-slate-200 hover:bg-slate-50'}`}>
+                        <input type="radio" name="paymentType" value="DP_10" checked={paymentType === 'DP_10'} onChange={() => setPaymentType('DP_10')} className="w-4 h-4 text-indigo-600 focus:ring-indigo-500" />
+                        <div className="flex-1">
+                          <div className="flex justify-between items-center">
+                            <p className="font-bold text-sm text-slate-800">Early Bird (DP 10%)</p>
+                            <span className="text-[10px] font-bold text-rose-600 bg-rose-50 px-2 py-0.5 rounded">Hangus 24 Jam</span>
+                          </div>
+                          <p className="text-xs text-slate-500">Bayar 10% dulu, sisa dibayar nanti</p>
+                        </div>
+                      </label>
+                    )}
+
+                    {selectedRoom?.allow_dp_25 && (
+                      <label className={`flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-all ${paymentType === 'DP_25' ? 'border-indigo-500 bg-indigo-50/50' : 'border-slate-200 hover:bg-slate-50'}`}>
+                        <input type="radio" name="paymentType" value="DP_25" checked={paymentType === 'DP_25'} onChange={() => setPaymentType('DP_25')} className="w-4 h-4 text-indigo-600 focus:ring-indigo-500" />
+                        <div className="flex-1">
+                          <div className="flex justify-between items-center">
+                            <p className="font-bold text-sm text-slate-800">Booking Aman (DP 25%)</p>
+                            <span className="text-[10px] font-bold text-amber-600 bg-amber-50 px-2 py-0.5 rounded">Jeda 7 Hari</span>
+                          </div>
+                          <p className="text-xs text-slate-500">Bayar 25% dulu, pelunasan diberi waktu</p>
+                        </div>
+                      </label>
+                    )}
+                  </div>
+                </div>
+
+
                 {/* Billing Summary */}
                 <div className="p-4 bg-slate-50 rounded-2xl space-y-2 border border-slate-100">
                   <div className="flex justify-between text-xs text-slate-400 font-bold">
@@ -433,7 +482,7 @@ export default function PublicPropertyDetails({ params }: { params: Promise<{ id
                   <hr className="border-slate-200/50" />
                   <div className="flex justify-between text-sm text-slate-800 font-black">
                     <span>Total Bayar</span>
-                    <span>{formatRupiah((Number(selectedRoom?.price_per_month) * durationMonths) + 10000)}</span>
+                    <span>{formatRupiah(paymentType === 'FULL' ? (Number(selectedRoom?.price_per_month) * durationMonths) + 10000 : paymentType === 'DP_10' ? ((Number(selectedRoom?.price_per_month) * durationMonths) * 0.10) + 10000 : ((Number(selectedRoom?.price_per_month) * durationMonths) * 0.25) + 10000)}</span>
                   </div>
                 </div>
 
@@ -481,7 +530,7 @@ export default function PublicPropertyDetails({ params }: { params: Promise<{ id
 
                     <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-0.5">Total Tagihan</span>
                     <span className="text-lg font-black text-indigo-300">
-                      {formatRupiah((Number(selectedRoom?.price_per_month) * durationMonths) + 10000)}
+                      {formatRupiah(paymentType === 'FULL' ? (Number(selectedRoom?.price_per_month) * durationMonths) + 10000 : paymentType === 'DP_10' ? ((Number(selectedRoom?.price_per_month) * durationMonths) * 0.10) + 10000 : ((Number(selectedRoom?.price_per_month) * durationMonths) * 0.25) + 10000)}
                     </span>
                   </div>
 
