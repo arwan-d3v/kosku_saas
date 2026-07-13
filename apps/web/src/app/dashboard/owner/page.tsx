@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
+import { CountdownTimer } from '@/components/CountdownTimer';
 import { Home, DoorOpen, Wallet, ArrowUpRight, TrendingUp, Users } from 'lucide-react';
 import { fetchWithAuth } from '@/lib/api-client';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from 'recharts';
@@ -199,7 +200,7 @@ export default function OwnerDashboard() {
                 else expireText = `Sisa: ${diffHrs} Jam`;
               }
 
-              const timeLimitText = booking.dp_type === 'DP_10' ? 'Hangus dalam 24 Jam' : 'Jeda 7 Hari';
+              // const timeLimitText = booking.dp_type === 'DP_10' ? 'Hangus dalam 24 Jam' : 'Jeda 7 Hari';
 
               return (
                 <div key={i} className="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 flex flex-col justify-between">
@@ -211,9 +212,9 @@ export default function OwnerDashboard() {
                       </span>
                     </div>
                     <p className="text-xs text-slate-500 font-medium">{booking.room?.room_number || `Booking #${booking.id.substring(0, 8)}`}</p>
-                    <div className={`mt-3 flex items-center gap-1 text-xs font-bold w-fit px-2 py-1 rounded-full ${isExpired ? 'text-red-600 bg-red-50' : 'text-rose-600 bg-rose-50'}`}>
-                      <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-                      {expireText} ({timeLimitText})
+                    <div className="mt-3 flex items-center justify-between">
+
+                      <CountdownTimer expiresAt={booking.dp_expires_at} />
                     </div>
                   </div>
 

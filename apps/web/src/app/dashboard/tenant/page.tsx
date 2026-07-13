@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { CountdownTimer } from '@/components/CountdownTimer';
 import { 
   Building, 
   MapPin, 
@@ -22,37 +23,6 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 
 
-const CountdownTimer = ({ expiresAt }: { expiresAt: string }) => {
-  const [timeLeft, setTimeLeft] = useState('');
-
-  useEffect(() => {
-    const timer = setInterval(() => {
-      const now = new Date().getTime();
-      const expiry = new Date(expiresAt).getTime();
-      const distance = expiry - now;
-
-      if (distance < 0) {
-        clearInterval(timer);
-        setTimeLeft('Expired');
-        return;
-      }
-
-      const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-      const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
-      const seconds = Math.floor((distance % (1000 * 60)) / 1000);
-
-      setTimeLeft(`${hours}j ${minutes}m ${seconds}d`);
-    }, 1000);
-
-    return () => clearInterval(timer);
-  }, [expiresAt]);
-
-  if (timeLeft === 'Expired') {
-    return <span className="text-rose-500 font-bold flex items-center gap-1"><Clock size={12}/> Waktu Habis (Hangus)</span>;
-  }
-
-  return <span className="text-amber-600 font-bold flex items-center gap-1"><Clock size={12}/> ${timeLeft}</span>;
-};
 
 
 export default function TenantDashboard() {
