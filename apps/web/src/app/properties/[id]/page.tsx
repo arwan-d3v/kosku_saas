@@ -41,6 +41,7 @@ export default function PublicPropertyDetails({ params }: { params: Promise<{ id
   const [showPaymentSimulator, setShowPaymentSimulator] = useState(false);
   const [paymentSuccess, setPaymentSuccess] = useState(false);
   const [createdBookingId, setCreatedBookingId] = useState<string | null>(null);
+  const [showAuthGate, setShowAuthGate] = useState(false);
 
   const router = useRouter();
 
@@ -232,9 +233,15 @@ export default function PublicPropertyDetails({ params }: { params: Promise<{ id
         
         <p className="text-slate-500 text-sm font-medium flex items-center gap-1.5 mb-4">
           <MapPin size={16} className="text-indigo-500" />
-          <a href={`https://maps.google.com/?q=${encodeURIComponent(property.address + ' ' + property.city)}`} target="_blank" rel="noopener noreferrer" className="hover:text-indigo-600 hover:underline transition-all">
-            {property.address}, {property.city}
-          </a>
+          {isAuthenticated ? (
+            <a href={`https://maps.google.com/?q=${encodeURIComponent(property.address + ' ' + property.city)}`} target="_blank" rel="noopener noreferrer" className="hover:text-indigo-600 hover:underline transition-all">
+              {property.address}, {property.city}
+            </a>
+          ) : (
+            <span className="text-slate-500 cursor-pointer" onClick={() => setShowAuthGate(true)}>
+              {property.address}, {property.city} <span className="text-[10px] bg-slate-200 text-slate-600 px-1.5 py-0.5 rounded ml-1"><Lock size={10} className="inline mr-1" />Login untuk maps</span>
+            </span>
+          )}
         </p>
 
         {/* KosLock Badge & Rooms Left */}
@@ -571,6 +578,57 @@ export default function PublicPropertyDetails({ params }: { params: Promise<{ id
         )}
       </AnimatePresence>
 
+      {/* Auth Gate Modal for Maps */}
+      <AnimatePresence>
+        {showAuthGate && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowAuthGate(false)}
+              className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm"
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 10 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 10 }}
+              className="relative w-full max-w-sm bg-white rounded-3xl p-6 shadow-2xl border border-slate-100 overflow-hidden"
+            >
+              <button
+                onClick={() => setShowAuthGate(false)}
+                className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 p-2 rounded-full hover:bg-slate-50 transition"
+              >
+                <X size={18} />
+              </button>
+
+              <div className="flex flex-col items-center text-center pt-4">
+                <div className="w-16 h-16 rounded-2xl bg-indigo-50 border border-indigo-100 flex items-center justify-center mb-4">
+                  <Lock size={28} className="text-indigo-500" />
+                </div>
+                <h3 className="text-xl font-black text-slate-800 mb-2">Akses Terkunci</h3>
+                <p className="text-sm text-slate-500 mb-6">
+                  Silakan masuk atau buat akun untuk melihat lokasi maps dan menggunakan fitur lengkap.
+                </p>
+                <div className="flex flex-col gap-3 w-full">
+                  <button
+                    onClick={() => router.push('/login')}
+                    className="w-full py-3.5 bg-indigo-600 text-white rounded-xl font-bold text-sm shadow-lg shadow-indigo-600/20 hover:bg-indigo-700 transition"
+                  >
+                    Masuk ke Akun
+                  </button>
+                  <button
+                    onClick={() => setShowAuthGate(false)}
+                    className="w-full py-3.5 bg-white text-slate-600 border border-slate-200 rounded-xl font-bold text-sm hover:bg-slate-50 transition"
+                  >
+                    Nanti Saja
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
