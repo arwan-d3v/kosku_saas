@@ -1,12 +1,16 @@
 ## Log Agent
 - **Last Edited By:** Jules (Agent)
-- **Timestamp:** $(date)
+- **Timestamp:** Mon Jul 13 05:26:55 UTC 2026
 - **Changes Made:**
-  - Fixed Next.js build error by adding `|| 'placeholder'` fallbacks for `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` in `apps/web/src/lib/supabase.ts` to prevent prerendering issues in CI/CD pipelines without `.env`.
-  - Addressed code review: Replaced hardcoded mock data in `apps/web/src/app/dashboard/owner/page.tsx` with dynamic fetching for Early Bird bookings (calculating countdowns for `DP_10` and `DP_25`).
-  - Addressed code review: Validated `apps/web/src/app/dashboard/owner/properties/page.tsx` is mobile responsive, with mobile grid layout using cards, and desktop layout using tables.
-  - Addressed code review: Gated the Google Maps link in `apps/web/src/app/properties/[id]/page.tsx` behind an `AuthGate` modal, prompting unauthenticated users to login or create an account to view exact locations.
+  - Added Supabase migrations and NestJS logic for Early Bird Down Payment rules (10% expires in 24h; 25% expires in 7d).
+  - Updated frontend with dynamic fetching for properties, Google OAuth login (Supabase), and mobile layout fixes (resolving overlapping carousels via flex-nowrap snap-x).
+  - Fixed Next.js build error (Next prerender error on Supabase url missing) by adding `|| 'placeholder'` fallbacks for `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` in `apps/web/src/lib/supabase.ts`.
+  - Replaced hardcoded mock data in `apps/web/src/app/dashboard/owner/page.tsx` with dynamic fetching for Early Bird bookings (calculating countdowns for DP_10 and DP_25).
+  - Validated `apps/web/src/app/dashboard/owner/properties/page.tsx` is mobile responsive, with mobile grid layout using cards, and desktop layout using tables.
+  - Gated the Google Maps link in `apps/web/src/app/properties/[id]/page.tsx` behind an `AuthGate` modal, prompting unauthenticated users to login or create an account to view exact locations.
+  - Added Auth Gate overlay for unauthenticated users for booking interactions.
 - **Scan for Next Needs:**
   - Ensure end-to-end integration of frontend payment confirmation status with the owner dashboard is correctly handling socket connections or interval polling for real-time updates.
   - Implement actual receipt upload flow to Cloudflare R2 when the Owner clicks "Upload Resi/Offline" on the Early Bird dashboard.
+  - Optimize rendering speed for property images on the public view.
 - **Priority Recommendations:** High - Finish the offline payment upload receipt functionality for owner dashboard and tenant view.
