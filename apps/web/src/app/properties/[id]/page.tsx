@@ -185,7 +185,7 @@ export default function PublicPropertyDetails({ params }: { params: Promise<{ id
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 pb-28 md:pb-12 max-w-md mx-auto md:max-w-4xl bg-white shadow-xl shadow-slate-200/50">
+    <div className="min-h-screen bg-slate-50 pb-40 md:pb-24 max-w-md mx-auto md:max-w-4xl bg-white shadow-xl shadow-slate-200/50">
       
       {/* 1. Header Image Carousel */}
       <div className="relative w-full h-[350px] md:h-[450px]">
@@ -348,7 +348,7 @@ export default function PublicPropertyDetails({ params }: { params: Promise<{ id
       </div>
 
       {/* 4. Sticky Bottom Action Bar */}
-      <div className="fixed bottom-0 left-0 w-full z-40 md:flex md:justify-center pointer-events-none">
+      <div className="fixed bottom-[72px] lg:bottom-0 left-0 w-full z-40 md:flex md:justify-center pointer-events-none">
         <div className="w-full max-w-md md:max-w-4xl bg-white/85 backdrop-blur-xl border-t border-slate-200/60 p-4 md:px-8 pb-safe pointer-events-auto shadow-[0_-10px_40px_-15px_rgba(0,0,0,0.1)]">
           <div className="flex items-center justify-between">
             <div className="flex flex-col">
