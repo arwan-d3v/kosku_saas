@@ -2,9 +2,9 @@
 
 import React, { useState, useEffect } from 'react';
 import { CountdownTimer } from '@/components/CountdownTimer';
-import { Home, DoorOpen, Wallet, ArrowUpRight, TrendingUp, Users } from 'lucide-react';
+import { Home, DoorOpen, Wallet, ArrowUpRight, TrendingUp, Users, Printer, ShieldCheck, Activity } from 'lucide-react';
 import { fetchWithAuth } from '@/lib/api-client';
-import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from 'recharts';
+import { AreaChart, Area, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, Legend } from 'recharts';
 
 export default function OwnerDashboard() {
   const [propertiesCount, setPropertiesCount] = useState(0);
@@ -13,15 +13,17 @@ export default function OwnerDashboard() {
   const [revenue, setRevenue] = useState(0);
   const [loading, setLoading] = useState(true);
   const [earlyBirdBookings, setEarlyBirdBookings] = useState<any[]>([]);
+  const [activeTenants, setActiveTenants] = useState<any[]>([]);
 
-  // Mock data for charts to demonstrate professional look
-  const revenueData = [
-    { name: 'Jan', total: 4500000 },
-    { name: 'Feb', total: 5200000 },
-    { name: 'Mar', total: 4800000 },
-    { name: 'Apr', total: 6100000 },
-    { name: 'Mei', total: 5900000 },
-    { name: 'Jun', total: 7200000 },
+  // Dual-line chart data (Growth vs Rentals)
+  const performanceData = [
+    { name: 'Jan', revenue: 4500000, rentals: 4 },
+    { name: 'Feb', revenue: 5200000, rentals: 5 },
+    { name: 'Mar', revenue: 4800000, rentals: 4 },
+    { name: 'Apr', revenue: 6100000, rentals: 7 },
+    { name: 'Mei', revenue: 5900000, rentals: 6 },
+    { name: 'Jun', revenue: 7200000, rentals: 9 },
+    { name: 'Jul', revenue: 8500000, rentals: 11 },
   ];
 
   const occupancyData = [
@@ -34,13 +36,16 @@ export default function OwnerDashboard() {
     fetchDashboardData();
   }, []);
 
-
   const handleConfirmArrival = (id: string) => {
     alert(`Konfirmasi kedatangan untuk booking ${id} berhasil dikirim ke server.`);
   };
 
   const handleUploadResi = (id: string) => {
     alert(`Form upload resi pembayaran offline untuk booking ${id} dibuka.`);
+  };
+
+  const handlePrint = () => {
+    window.print();
   };
 
   const fetchDashboardData = async () => {
@@ -54,8 +59,8 @@ export default function OwnerDashboard() {
       const roomsPromises = properties.map((prop: any) => 
         fetchWithAuth(`/properties/${prop.id}/rooms`)
           .then((roomsData: any[]) => {
-            totalR += roomsData.length;
-            totalAvail += roomsData.filter((r: any) => r.is_available).length;
+             totalR += roomsData.length;
+             totalAvail += roomsData.filter((r: any) => r.is_available).length;
           })
           .catch((err) => console.error(err))
       );
@@ -68,12 +73,16 @@ export default function OwnerDashboard() {
       const totalRev = paidBookings.reduce((sum: number, b: any) => sum + Number(b.total_price), 0);
       setRevenue(totalRev);
 
-      // Filter early bird bookings (payment_type is not full and booking is recent)
+      // Filter early bird bookings
       const ebBookings = bookings.filter((b: any) =>
         (b.payment_type === 'DP_10' || b.payment_type === 'DP_25') &&
         b.status === 'PAID'
       );
       setEarlyBirdBookings(ebBookings);
+
+      // Filter active tenants
+      const active = bookings.filter((b: any) => b.status === 'PAID');
+      setActiveTenants(active);
 
     } catch (error) {
       console.error('Failed to fetch dashboard data:', error);
@@ -94,16 +103,37 @@ export default function OwnerDashboard() {
   ];
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 print:m-0 print:p-0">
+      
+      {/* Header Actions */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-2 hide-on-print">
+        <div>
+          <h1 className="text-2xl font-black text-slate-800">Ringkasan Bisnis</h1>
+          <p className="text-sm text-slate-500 font-medium">Pantau performa properti Anda secara real-time</p>
+        </div>
+        <button 
+          onClick={handlePrint}
+          className="flex items-center gap-2 bg-slate-800 hover:bg-slate-700 text-white px-4 py-2 rounded-xl text-sm font-bold shadow-md transition-colors"
+        >
+          <Printer size={16} /> Cetak Laporan
+        </button>
+      </div>
+
+      {/* Print Header (Only visible when printing) */}
+      <div className="hidden print:block mb-8 text-center border-b pb-4">
+        <h1 className="text-3xl font-black text-slate-800 mb-2">Laporan Analisis Properti KosKosanKu</h1>
+        <p className="text-sm text-slate-500">Dicetak pada: {new Date().toLocaleDateString('id-ID')} | Periode: YTD</p>
+      </div>
+
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {stats.map((stat, idx) => (
-          <div key={idx} className="bg-white p-6 rounded-3xl border border-slate-100 shadow-[0_2px_10px_rgba(0,0,0,0.04)] hover:shadow-lg transition-shadow">
+          <div key={idx} className="bg-white p-6 rounded-3xl border border-slate-100 shadow-[0_2px_10px_rgba(0,0,0,0.04)] print:border-slate-300 print:shadow-none">
             <div className="flex justify-between items-start mb-4">
-              <div className={`w-12 h-12 ${stat.color} rounded-2xl flex items-center justify-center`}>
+              <div className={`w-12 h-12 ${stat.color} print:bg-slate-100 rounded-2xl flex items-center justify-center`}>
                 {stat.icon}
               </div>
-              <div className="flex items-center gap-1 text-emerald-500 bg-emerald-50 px-2 py-1 rounded-lg text-xs font-bold">
+              <div className="flex items-center gap-1 text-emerald-500 bg-emerald-50 print:bg-transparent print:border print:border-emerald-200 px-2 py-1 rounded-lg text-xs font-bold">
                 <TrendingUp size={14} />
                 {stat.trend}
               </div>
@@ -116,39 +146,40 @@ export default function OwnerDashboard() {
 
       {/* Charts Section */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Revenue Chart */}
-        <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-[0_2px_10px_rgba(0,0,0,0.04)] lg:col-span-2">
+        {/* Dual Line Chart (Revenue vs Rentals) */}
+        <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-[0_2px_10px_rgba(0,0,0,0.04)] lg:col-span-2 print:border-slate-300 print:shadow-none">
           <div className="flex justify-between items-center mb-6">
             <div>
-              <h3 className="text-lg font-bold text-slate-800">Tren Pendapatan</h3>
-              <p className="text-xs text-slate-500">6 Bulan Terakhir</p>
+              <h3 className="text-lg font-bold text-slate-800 flex items-center gap-2">
+                <Activity size={18} className="text-indigo-500" /> Analitik Pertumbuhan
+              </h3>
+              <p className="text-xs text-slate-500">Perbandingan Pendapatan & Volume Rental</p>
             </div>
-            <button className="text-sm text-blue-600 font-bold hover:bg-blue-50 px-3 py-1.5 rounded-lg transition">Laporan Lengkap</button>
           </div>
           <div className="h-[300px] w-full">
             <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={revenueData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
-                <defs>
-                  <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#2563eb" stopOpacity={0.3}/>
-                    <stop offset="95%" stopColor="#2563eb" stopOpacity={0}/>
-                  </linearGradient>
-                </defs>
+              <LineChart data={performanceData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
                 <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#64748b' }} dy={10} />
-                <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#64748b' }} tickFormatter={(val) => `Rp${val/1000000}M`} />
+                <YAxis yAxisId="left" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#64748b' }} tickFormatter={(val) => `Rp${val/1000000}M`} />
+                <YAxis yAxisId="right" orientation="right" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#64748b' }} />
                 <Tooltip 
                   contentStyle={{ borderRadius: '16px', border: 'none', boxShadow: '0 4px 20px rgba(0,0,0,0.08)' }}
-                  formatter={(value: any) => [formatRupiah(Number(value) || 0), 'Pendapatan']}
+                  formatter={(value: any, name: string) => [
+                    name === 'revenue' ? formatRupiah(Number(value) || 0) : value, 
+                    name === 'revenue' ? 'Pendapatan' : 'Jumlah Rental'
+                  ]}
                 />
-                <Area type="monotone" dataKey="total" stroke="#2563eb" strokeWidth={3} fillOpacity={1} fill="url(#colorRevenue)" />
-              </AreaChart>
+                <Legend iconType="circle" wrapperStyle={{ fontSize: '12px', paddingTop: '10px' }} />
+                <Line yAxisId="left" type="monotone" dataKey="revenue" name="Pendapatan" stroke="#2563eb" strokeWidth={3} dot={{ r: 4, strokeWidth: 2 }} activeDot={{ r: 6 }} />
+                <Line yAxisId="right" type="monotone" dataKey="rentals" name="Jumlah Rental" stroke="#f59e0b" strokeWidth={3} dot={{ r: 4, strokeWidth: 2 }} activeDot={{ r: 6 }} />
+              </LineChart>
             </ResponsiveContainer>
           </div>
         </div>
 
         {/* Occupancy Chart */}
-        <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-[0_2px_10px_rgba(0,0,0,0.04)]">
+        <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-[0_2px_10px_rgba(0,0,0,0.04)] print:border-slate-300 print:shadow-none">
           <div className="flex justify-between items-center mb-6">
             <h3 className="text-lg font-bold text-slate-800">Tingkat Okupansi</h3>
           </div>
@@ -159,6 +190,7 @@ export default function OwnerDashboard() {
                 <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#64748b' }} dy={10} />
                 <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#64748b' }} />
                 <Tooltip cursor={{fill: '#f8fafc'}} contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 20px rgba(0,0,0,0.08)' }} />
+                <Legend iconType="circle" wrapperStyle={{ fontSize: '12px', paddingTop: '10px' }} />
                 <Bar dataKey="penuh" stackId="a" fill="#10b981" radius={[0, 0, 4, 4]} name="Terisi" barSize={32} />
                 <Bar dataKey="kosong" stackId="a" fill="#cbd5e1" radius={[4, 4, 0, 0]} name="Kosong" />
               </BarChart>
@@ -167,92 +199,73 @@ export default function OwnerDashboard() {
         </div>
       </div>
 
-
-      {/* Early Bird DP Notifications */}
-      <div className="bg-gradient-to-r from-amber-50 to-orange-50 p-6 rounded-3xl border border-amber-200/50 shadow-sm mt-6 mb-6">
-        <div className="flex items-center gap-3 mb-4">
-          <div className="w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center text-amber-600">
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-          </div>
-          <div>
-            <h3 className="text-lg font-bold text-amber-900">Konfirmasi Kedatangan (Early Bird)</h3>
-            <p className="text-sm text-amber-700 font-medium">Terdapat penyewa dengan sistem Down Payment menunggu kedatangan.</p>
-          </div>
-        </div>
-
-        {earlyBirdBookings.length === 0 ? (
-          <div className="text-center py-4 bg-white rounded-xl shadow-sm border border-amber-100">
-            <p className="text-sm text-amber-700 font-medium">Tidak ada penyewa dengan sistem Early Bird/Down Payment saat ini.</p>
+      {/* Active Tenants with Deposit Flags */}
+      <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-[0_2px_10px_rgba(0,0,0,0.04)] print:border-slate-300 print:shadow-none mt-6">
+        <h3 className="text-lg font-bold text-slate-800 mb-6 flex items-center gap-2">
+          <Users size={18} className="text-indigo-500" /> Daftar Penghuni Aktif
+        </h3>
+        
+        {activeTenants.length === 0 ? (
+          <div className="text-center py-6 bg-slate-50 rounded-xl">
+            <p className="text-sm text-slate-500 font-medium">Belum ada penghuni aktif.</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {earlyBirdBookings.map((booking, i) => {
-              const expireDate = new Date(booking.dp_expires_at);
-              const now = new Date();
-              const diffMs = expireDate.getTime() - now.getTime();
-              const isExpired = diffMs <= 0;
-              let expireText = isExpired ? 'Hangus' : 'Berjalan';
-
-              if (!isExpired) {
-                const diffHrs = Math.floor(diffMs / (1000 * 60 * 60));
-                const diffDays = Math.floor(diffHrs / 24);
-                if (diffDays > 0) expireText = `Sisa: ${diffDays} Hari`;
-                else expireText = `Sisa: ${diffHrs} Jam`;
-              }
-
-
-              return (
-                <div key={i} className="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 flex flex-col justify-between">
-                  <div>
-                    <div className="flex justify-between items-start mb-2">
-                      <h4 className="font-bold text-slate-800">{booking.customer?.full_name || 'Penghuni'}</h4>
-                      <span className={`text-[10px] font-bold px-2 py-1 rounded-md ${booking.payment_type === 'DP_10' ? 'bg-rose-100 text-rose-700' : 'bg-orange-100 text-orange-700'}`}>
-                        {booking.payment_type === 'DP_10' ? 'Early Bird (DP 10%)' : 'Booking Aman (DP 25%)'}
-                      </span>
-                    </div>
-                    <p className="text-xs text-slate-500 font-medium">{booking.rooms?.room_number || `Booking #${booking.id.substring(0, 8)}`}</p>
-                    <div className="mt-3 flex items-center justify-between">
-
-                      <CountdownTimer expiresAt={booking.dp_expires_at} />
-                    </div>
-                  </div>
-
-                  <div className="flex gap-2 mt-4 pt-4 border-t border-slate-100">
-                    <button onClick={() => handleConfirmArrival(booking.id)} disabled={isExpired} className={`flex-1 py-2 font-bold text-xs rounded-xl transition-colors border ${isExpired ? 'bg-slate-50 text-slate-400 border-slate-200 cursor-not-allowed' : 'bg-emerald-50 text-emerald-600 hover:bg-emerald-100 border-emerald-200'}`}>
-                      Konfirmasi Kedatangan
-                    </button>
-                    <button onClick={() => handleUploadResi(booking.id)} disabled={isExpired} className={`flex-1 py-2 font-bold text-xs rounded-xl transition-colors border ${isExpired ? 'bg-slate-50 text-slate-400 border-slate-200 cursor-not-allowed' : 'bg-blue-50 text-blue-600 hover:bg-blue-100 border-blue-200'}`}>
-                      Upload Resi/Offline
-                    </button>
-                  </div>
-                </div>
-              );
-            })}
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-sm">
+              <thead className="text-xs text-slate-500 uppercase bg-slate-50">
+                <tr>
+                  <th className="px-4 py-3 rounded-l-lg">Penghuni</th>
+                  <th className="px-4 py-3">Kamar</th>
+                  <th className="px-4 py-3">Periode</th>
+                  <th className="px-4 py-3 rounded-r-lg">Status & Jaminan</th>
+                </tr>
+              </thead>
+              <tbody>
+                {activeTenants.map((booking, i) => (
+                  <tr key={i} className="border-b border-slate-100 last:border-0 hover:bg-slate-50/50 transition">
+                    <td className="px-4 py-4 font-bold text-slate-800">{booking.customer?.full_name || 'Penghuni'}</td>
+                    <td className="px-4 py-4 text-slate-600 font-medium">{booking.rooms?.room_number || `Booking #${booking.id.substring(0, 8)}`}</td>
+                    <td className="px-4 py-4 text-slate-600 text-xs">
+                      {new Date(booking.start_date).toLocaleDateString('id-ID')} - {booking.end_date ? new Date(booking.end_date).toLocaleDateString('id-ID') : 'Ongoing'}
+                    </td>
+                    <td className="px-4 py-4">
+                      {booking.auto_renewal_enabled ? (
+                        <div className="inline-flex items-center gap-1.5 bg-emerald-50 text-emerald-700 border border-emerald-200 px-2.5 py-1 rounded-md font-bold text-[10px]">
+                          <ShieldCheck size={14} /> Auto-Renewal Aktif: {formatRupiah(Number(booking.auto_renewal_deposit))}
+                        </div>
+                      ) : (
+                        <div className="inline-flex items-center gap-1.5 bg-slate-100 text-slate-500 px-2.5 py-1 rounded-md font-bold text-[10px]">
+                          Tidak Ada Jaminan
+                        </div>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         )}
       </div>
-{/* Recent Activity */}
-      <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-[0_2px_10px_rgba(0,0,0,0.04)]">
-        <h3 className="text-lg font-bold text-slate-800 mb-6">Aktivitas Terbaru</h3>
-        <div className="space-y-4">
-          {[
-            { title: 'Pembayaran Diterima', desc: 'Budi Santoso membayar sewa Kamar 3A', time: '2 jam yang lalu', icon: <Wallet size={16} className="text-emerald-600"/>, bg: 'bg-emerald-50' },
-            { title: 'Booking Baru', desc: 'Siti Aminah memesan Kamar 2B (Kosan Andalan)', time: '5 jam yang lalu', icon: <DoorOpen size={16} className="text-blue-600"/>, bg: 'bg-blue-50' },
-            { title: 'Laporan Kerusakan', desc: 'AC Kamar 1C bocor (Dilaporkan oleh Andi)', time: '1 hari yang lalu', icon: <ArrowUpRight size={16} className="text-red-600"/>, bg: 'bg-red-50' },
-          ].map((act, i) => (
-            <div key={i} className="flex items-center gap-4 p-3 hover:bg-slate-50 rounded-2xl transition cursor-pointer">
-              <div className={`w-10 h-10 rounded-full flex items-center justify-center ${act.bg}`}>
-                {act.icon}
-              </div>
-              <div className="flex-1">
-                <h4 className="text-sm font-bold text-slate-800">{act.title}</h4>
-                <p className="text-xs text-slate-500">{act.desc}</p>
-              </div>
-              <span className="text-xs font-semibold text-slate-400">{act.time}</span>
-            </div>
-          ))}
-        </div>
-      </div>
+
+      <style jsx global>{`
+        @media print {
+          body * {
+            visibility: hidden;
+          }
+          .print\\:m-0, .print\\:m-0 * {
+            visibility: visible;
+          }
+          .print\\:m-0 {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100%;
+          }
+          .hide-on-print {
+            display: none !important;
+          }
+        }
+      `}</style>
     </div>
   );
 }

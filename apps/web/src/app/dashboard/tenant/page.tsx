@@ -21,6 +21,7 @@ import { fetchWithAuth } from '@/lib/api-client';
 import { supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { useLogout } from '@/hooks/useLogout';
 
 
 
@@ -30,11 +31,13 @@ export default function TenantDashboard() {
   const [loading, setLoading] = useState(true);
   const [userProfile, setUserProfile] = useState<any>(null);
   const router = useRouter();
+  const handleLogout = useLogout();
 
   // Payment simulator states
   const [selectedBooking, setSelectedBooking] = useState<any>(null);
   const [showPaymentSimulator, setShowPaymentSimulator] = useState(false);
   const [paymentSuccess, setPaymentSuccess] = useState(false);
+  const [isDepositPayment, setIsDepositPayment] = useState(false);
 
   useEffect(() => {
     fetchData();
@@ -68,17 +71,15 @@ export default function TenantDashboard() {
     }
   };
 
-  const handleLogout = async () => {
-    await supabase.auth.signOut();
-    router.push('/');
-  };
+
 
   const formatRupiah = (number: number) => {
     return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(number);
   };
 
-  const handlePaymentInit = (booking: any) => {
+  const handlePaymentInit = (booking: any, isDeposit = false) => {
     setSelectedBooking(booking);
+    setIsDepositPayment(isDeposit);
     setShowPaymentSimulator(true);
   };
 
@@ -86,16 +87,28 @@ export default function TenantDashboard() {
     if (!selectedBooking) return;
 
     try {
-      if (selectedBooking.status === 'PAID' && selectedBooking.payment_type !== 'FULL' && !selectedBooking.balance_paid) {
-        await fetchWithAuth('/payment/confirm-balance', {
-          method: 'POST',
-          body: JSON.stringify({ bookingId: selectedBooking.id })
-        });
+      if (isDepositPayment) {
+        // Update deposit using Supabase directly for simplicity in simulation
+        const depositAmount = getLowestPrice(selectedBooking.rooms?.properties); // Example: deposit = 1 month rent
+        await supabase
+          .from('bookings')
+          .update({ 
+            auto_renewal_deposit: depositAmount,
+            auto_renewal_enabled: true 
+          })
+          .eq('id', selectedBooking.id);
       } else {
-        await fetchWithAuth('/payment/confirm', {
-          method: 'POST',
-          body: JSON.stringify({ bookingId: selectedBooking.id })
-        });
+        if (selectedBooking.status === 'PAID' && selectedBooking.payment_type !== 'FULL' && !selectedBooking.balance_paid) {
+          await fetchWithAuth('/payment/confirm-balance', {
+            method: 'POST',
+            body: JSON.stringify({ bookingId: selectedBooking.id })
+          });
+        } else {
+          await fetchWithAuth('/payment/confirm', {
+            method: 'POST',
+            body: JSON.stringify({ bookingId: selectedBooking.id })
+          });
+        }
       }
 
       setPaymentSuccess(true);
@@ -103,12 +116,18 @@ export default function TenantDashboard() {
         setShowPaymentSimulator(false);
         setPaymentSuccess(false);
         setSelectedBooking(null);
+        setIsDepositPayment(false);
         fetchData(); // Refresh bookings
       }, 2500);
     } catch (error: any) {
       console.error('Payment confirmation error:', error);
-      alert('Konfirmasi pembayaran gagal: ' + error.message);
+      alert('Konfirmasi gagal: ' + error.message);
     }
+  };
+
+  const getLowestPrice = (property: any) => {
+    if (!property || !property.rooms || property.rooms.length === 0) return 1000000;
+    return Math.min(...property.rooms.map((r: any) => Number(r.price_per_month)));
   };
 
   if (loading) {
@@ -212,8 +231,14 @@ export default function TenantDashboard() {
                           Sisa Pelunasan: {formatRupiah(Number(booking.total_price) - Number(booking.dp_amount))}
                         </p>
                       )}
-                      {booking.payment_type !== 'FULL' && booking.dp_expires_at && (
-                        <div className="mt-1 flex justify-end text-xs"><CountdownTimer expiresAt={booking.dp_expires_at} /></div>
+                      {((booking.payment_type !== 'FULL' && booking.balance_paid) || (booking.payment_type === 'FULL' && isPaid)) ? (
+                        <div className="mt-1 flex justify-end text-[10px] text-slate-500 font-bold">
+                          Dilunasi: {new Date(booking.updated_at || booking.created_at).toLocaleString('id-ID', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                        </div>
+                      ) : (
+                        booking.payment_type !== 'FULL' && booking.dp_expires_at && (
+                          <div className="mt-1 flex justify-end text-xs"><CountdownTimer expiresAt={booking.dp_expires_at} /></div>
+                        )
                       )}
                     </div>
 
@@ -244,6 +269,34 @@ export default function TenantDashboard() {
                       )}
                     </div>
                   </div>
+
+                  {/* Auto-Renewal / Deposit Section */}
+                  {isPaid && (
+                    <div className="w-full mt-4 pt-4 border-t border-slate-100 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                      <div className="flex items-center gap-3">
+                        <div className={`w-10 h-10 rounded-full flex items-center justify-center ${booking.auto_renewal_enabled ? 'bg-emerald-100 text-emerald-600' : 'bg-slate-100 text-slate-400'}`}>
+                          <AlertCircle size={20} />
+                        </div>
+                        <div>
+                          <p className="text-sm font-black text-slate-800">Deposit Jaminan (Auto-Renewal)</p>
+                          <p className="text-[10px] font-medium text-slate-500">
+                            {booking.auto_renewal_enabled 
+                              ? `Aktif - Saldo: ${formatRupiah(Number(booking.auto_renewal_deposit))}`
+                              : 'Tidak Aktif - Isi deposit untuk perpanjangan bulan depan.'}
+                          </p>
+                        </div>
+                      </div>
+                      {!booking.auto_renewal_enabled && (
+                        <motion.button
+                          whileTap={{ scale: 0.95 }}
+                          onClick={() => handlePaymentInit(booking, true)}
+                          className="clay-button bg-orange-500 text-white text-xs !px-4 !py-2 shadow-md shadow-orange-100 whitespace-nowrap"
+                        >
+                          Isi Deposit & Aktifkan
+                        </motion.button>
+                      )}
+                    </div>
+                  )}
                 </div>
               );
             })}
@@ -279,12 +332,16 @@ export default function TenantDashboard() {
                     <span className="text-xs font-mono break-all text-slate-300 block mb-3">{selectedBooking.id}</span>
 
                     <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-0.5">
-                      {selectedBooking.status === 'PAID' && selectedBooking.payment_type !== 'FULL' && !selectedBooking.balance_paid ? 'Pelunasan Tagihan' : 'Total Tagihan'}
+                      {isDepositPayment 
+                        ? 'Top Up Deposit Auto-Renewal'
+                        : selectedBooking.status === 'PAID' && selectedBooking.payment_type !== 'FULL' && !selectedBooking.balance_paid ? 'Pelunasan Tagihan' : 'Total Tagihan'}
                     </span>
                     <span className="text-lg font-black text-indigo-300">
-                      {selectedBooking.status === 'PAID' && selectedBooking.payment_type !== 'FULL' && !selectedBooking.balance_paid
-                        ? formatRupiah(Number(selectedBooking.total_price) - Number(selectedBooking.dp_amount))
-                        : selectedBooking.payment_type !== 'FULL' ? formatRupiah(Number(selectedBooking.dp_amount)) : formatRupiah(Number(selectedBooking.total_price))}
+                      {isDepositPayment
+                        ? formatRupiah(getLowestPrice(selectedBooking.rooms?.properties))
+                        : selectedBooking.status === 'PAID' && selectedBooking.payment_type !== 'FULL' && !selectedBooking.balance_paid
+                          ? formatRupiah(Number(selectedBooking.total_price) - Number(selectedBooking.dp_amount))
+                          : selectedBooking.payment_type !== 'FULL' ? formatRupiah(Number(selectedBooking.dp_amount)) : formatRupiah(Number(selectedBooking.total_price))}
                     </span>
                   </div>
 

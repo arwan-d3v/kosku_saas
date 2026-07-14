@@ -6,6 +6,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import { Home, Search, BookmarkCheck, User, LayoutDashboard, LogOut, Building2 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { motion } from 'framer-motion';
+import { useLogout } from '@/hooks/useLogout';
 
 export default function BottomNavigation() {
   const pathname = usePathname();
@@ -13,6 +14,7 @@ export default function BottomNavigation() {
   const [role, setRole] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const handleLogout = useLogout();
 
   useEffect(() => {
     // Check session
@@ -59,10 +61,7 @@ export default function BottomNavigation() {
     };
   }, []);
 
-  const handleLogout = async () => {
-    await supabase.auth.signOut();
-    router.push('/');
-  };
+
 
   // Render nothing if still loading auth state
   if (loading) return null;
@@ -83,7 +82,11 @@ export default function BottomNavigation() {
       { label: 'Beranda', icon: <Home size={20} />, href: '/' },
       { label: 'Cari Kos', icon: <Search size={20} />, href: '/search' },
       { label: 'Kos Saya', icon: <BookmarkCheck size={20} />, href: '/dashboard/tenant' },
-      { label: isAuthenticated ? 'Akun' : 'Masuk', icon: <User size={20} />, href: '/login' },
+      { 
+        label: isAuthenticated ? 'Akun' : 'Masuk', 
+        icon: <User size={20} />, 
+        href: isAuthenticated ? (role === 'TENANT_ADMIN' || role === 'SUPERADMIN' ? '/dashboard/owner' : '/dashboard/tenant') : '/login' 
+      },
     ];
   }
 

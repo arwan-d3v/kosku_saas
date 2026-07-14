@@ -70,3 +70,24 @@
 **Priority Recommendations:**
 1. Manually apply the new SQL migration for Custom DP if using a managed Supabase project.
 2. Deploy the latest frontend and backend builds.
+
+---
+
+**Last Editor:** Antigravity (Agent)
+**Timestamp:** Tue Jul 14 2026
+
+**Changes Made:**
+1. **Search Experience:** Completely overhauled the search page layout to include a desktop sidebar and a mobile bottom sheet modal for advanced filtering. Added real-time filtering for City, Facilities (multi-select), Price Range, DP Availability, and Sorting.
+2. **Landing Page Ads:** Implemented a continuous marquee "Running Ads" banner. Added a clickable "Bisa DP" badge that routes users to the search page with the DP filter pre-enabled.
+3. **Tenant Dashboard:** Added "Top Up Deposit" functionality, allowing tenants to pay an auto-renewal guarantee.
+4. **Owner Dashboard Modernization:** Upgraded the UI to a professional analytics view with Recharts (Dual-line chart for Revenue vs Rentals). Added a print layout and button for generating business reports. Added an "Active Tenants" table to track auto-renewal deposits.
+5. **Database Enhancements:** Created migrations for `auto_renewal_deposit` in bookings and custom `price_per_day` / `price_per_week` in rooms to support flexible pricing options.
+6. **Navigation Fix:** Fixed a bug in `BottomNavigation` where the "Akun" tab forced authenticated users back to the `/login` page.
+
+**Next Needs:**
+* Apply the two latest migrations (`20240716000000_add_booking_deposit.sql` and `20240717000000_add_daily_weekly_pricing.sql`) to the Supabase database.
+* The backend API (`properties/rooms`) needs to be updated to accept and return the new daily and weekly pricing fields if the owner decides to use them.
+
+**Priority Recommendations:**
+1. Ensure the new migrations are pushed to the database (via Web UI since CLI is not configured locally).
+2. Test the print report functionality on the Owner Dashboard to ensure formatting holds up on physical prints/PDFs.

@@ -5,6 +5,7 @@ import { LayoutDashboard, Home, Users, CreditCard, Settings, LogOut } from 'luci
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
+import { useLogout } from '@/hooks/useLogout';
 
 export default function OwnerLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -18,16 +19,9 @@ export default function OwnerLayout({ children }: { children: React.ReactNode })
   ];
 
   const [avatar, setAvatar] = React.useState("https://api.dicebear.com/7.x/avataaars/svg?seed=Felix");
-  const router = useRouter();
+  const handleLogout = useLogout();
 
-  const handleLogout = async () => {
-    try {
-      await supabase.auth.signOut();
-      router.push('/');
-    } catch (error) {
-      console.error('Logout error:', error);
-    }
-  };
+
   
   React.useEffect(() => {
     import('@/lib/supabase').then(({ supabase }) => {
