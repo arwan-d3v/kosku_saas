@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { fetchWithAuth } from '@/lib/api-client';
 import { CreditCard, Calendar, User, Home, ArrowUpRight } from 'lucide-react';
 import { toast } from 'sonner';
+import { CountdownTimer } from '@/components/CountdownTimer';
 
 export default function TransactionsPage() {
   const [bookings, setBookings] = useState<any[]>([]);
@@ -42,6 +43,13 @@ export default function TransactionsPage() {
       case 'CANCELLED': return 'bg-rose-50 text-rose-600 border-rose-200';
       default: return 'bg-slate-50 text-slate-600 border-slate-200';
     }
+  };
+
+  const getPaymentTypeBadge = (type: string) => {
+    if (type === 'DP_10') return <span className="px-1.5 py-0.5 bg-fuchsia-100 text-fuchsia-700 rounded text-[9px] font-bold border border-fuchsia-200">DP 10%</span>;
+    if (type === 'DP_25') return <span className="px-1.5 py-0.5 bg-indigo-100 text-indigo-700 rounded text-[9px] font-bold border border-indigo-200">DP 25%</span>;
+    if (type === 'CUSTOM_DP') return <span className="px-1.5 py-0.5 bg-purple-100 text-purple-700 rounded text-[9px] font-bold border border-purple-200">DP</span>;
+    return <span className="px-1.5 py-0.5 bg-slate-100 text-slate-600 rounded text-[9px] font-bold border border-slate-200">FULL</span>;
   };
 
   return (
@@ -101,11 +109,33 @@ export default function TransactionsPage() {
                     </div>
                   </div>
                   
-                  <div className="bg-slate-50 p-3 rounded-xl flex justify-between items-center mt-2">
-                    <span className="text-xs font-bold text-slate-500">Total Pembayaran</span>
-                    <span className="font-black text-slate-800 text-sm">
-                      {formatRupiah(Number(booking.total_price))}
-                    </span>
+                  <div className="bg-slate-50 p-3 rounded-xl mt-2 flex flex-col gap-1">
+                    <div className="flex justify-between items-center">
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-bold text-slate-500">Total Pembayaran</span>
+                        {getPaymentTypeBadge(booking.payment_type)}
+                      </div>
+                      <span className="font-black text-slate-800 text-sm">
+                        {booking.payment_type !== 'FULL' ? formatRupiah(Number(booking.dp_amount)) : formatRupiah(Number(booking.total_price))}
+                      </span>
+                    </div>
+                    {booking.payment_type !== 'FULL' && (
+                      <div className="flex justify-between items-center mt-1">
+                        <span className="text-[10px] font-medium text-slate-400">Status Sisa Tagihan</span>
+                        {booking.balance_paid ? (
+                          <span className="text-xs font-bold text-emerald-500">Lunas</span>
+                        ) : (
+                          <span className="text-xs font-bold text-slate-500">
+                            Menunggu ({formatRupiah(Number(booking.total_price) - Number(booking.dp_amount))})
+                          </span>
+                        )}
+                      </div>
+                    )}
+                    {booking.payment_type !== 'FULL' && !booking.balance_paid && booking.dp_expires_at && (
+                      <div className="mt-1 flex justify-end">
+                        <CountdownTimer expiresAt={booking.dp_expires_at} />
+                      </div>
+                    )}
                   </div>
                 </div>
               ))}
@@ -148,8 +178,25 @@ export default function TransactionsPage() {
                         {formatDate(booking.start_date)}
                       </div>
                     </td>
-                    <td className="py-4 px-4 font-black text-slate-800">
-                      {formatRupiah(Number(booking.total_price))}
+                    <td className="py-4 px-4">
+                      <div className="flex flex-col">
+                        <div className="flex items-center gap-2 mb-0.5">
+                          <span className="font-black text-slate-800">
+                            {booking.payment_type !== 'FULL' ? formatRupiah(Number(booking.dp_amount)) : formatRupiah(Number(booking.total_price))}
+                          </span>
+                          {getPaymentTypeBadge(booking.payment_type)}
+                        </div>
+                        {booking.payment_type !== 'FULL' && (
+                          <span className="text-[10px] font-medium text-slate-500">
+                            {booking.balance_paid ? <span className="text-emerald-500">Sisa Lunas</span> : `Sisa: ${formatRupiah(Number(booking.total_price) - Number(booking.dp_amount))}`}
+                          </span>
+                        )}
+                        {booking.payment_type !== 'FULL' && !booking.balance_paid && booking.dp_expires_at && (
+                          <div className="mt-1">
+                            <CountdownTimer expiresAt={booking.dp_expires_at} />
+                          </div>
+                        )}
+                      </div>
                     </td>
                     <td className="py-4 px-4 rounded-r-2xl">
                       <span className={`px-3 py-1 rounded-full text-[10px] font-bold border uppercase tracking-wider ${getStatusColor(booking.status)}`}>

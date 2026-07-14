@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { Clock } from 'lucide-react';
 
 export const CountdownTimer = ({ expiresAt }: { expiresAt: string }) => {
-  const [timeLeft, setTimeLeft] = useState<{ hours: number; minutes: number; seconds: number } | null>(null);
+  const [timeLeft, setTimeLeft] = useState<{ days: number; hours: number; minutes: number; seconds: number } | null>(null);
   const [isExpired, setIsExpired] = useState(false);
 
   useEffect(() => {
@@ -20,11 +20,12 @@ export const CountdownTimer = ({ expiresAt }: { expiresAt: string }) => {
         return;
       }
 
-      const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)) + Math.floor(distance / (1000 * 60 * 60 * 24)) * 24;
+      const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+      const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
       const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
       const seconds = Math.floor((distance % (1000 * 60)) / 1000);
 
-      setTimeLeft({ hours, minutes, seconds });
+      setTimeLeft({ days, hours, minutes, seconds });
     }, 1000);
 
     return () => clearInterval(timer);
@@ -49,7 +50,15 @@ export const CountdownTimer = ({ expiresAt }: { expiresAt: string }) => {
         <span>SISA WAKTU</span>
       </div>
       <div className="flex gap-1">
-        <div className="w-7 h-7 bg-amber-50 rounded flex items-center justify-center text-amber-700 font-black text-xs border border-amber-200/50 shadow-sm shadow-amber-100">{timeLeft.hours.toString().padStart(2, '0')}</div>
+        {timeLeft.days > 0 && (
+          <>
+            <div className="px-2 h-7 bg-amber-50 rounded flex items-center justify-center text-amber-700 font-black text-xs border border-amber-200/50 shadow-sm shadow-amber-100">{timeLeft.days} Hari</div>
+            <span className="text-slate-300 font-bold">:</span>
+          </>
+        )}
+        <div className="w-7 h-7 bg-amber-50 rounded flex items-center justify-center text-amber-700 font-black text-xs border border-amber-200/50 shadow-sm shadow-amber-100">
+          {(timeLeft.days === 0 ? (timeLeft.hours + timeLeft.days * 24) : timeLeft.hours).toString().padStart(2, '0')}
+        </div>
         <span className="text-slate-300 font-bold">:</span>
         <div className="w-7 h-7 bg-amber-50 rounded flex items-center justify-center text-amber-700 font-black text-xs border border-amber-200/50 shadow-sm shadow-amber-100">{timeLeft.minutes.toString().padStart(2, '0')}</div>
         <span className="text-slate-300 font-bold">:</span>

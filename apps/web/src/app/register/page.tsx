@@ -21,7 +21,7 @@ export default function RegisterPage() {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL || (typeof window !== 'undefined' ? window.location.origin : '')}/search`
+          redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL || (typeof window !== 'undefined' ? window.location.origin : '')}/onboarding`
         }
       });
       if (error) throw error;
@@ -36,7 +36,7 @@ export default function RegisterPage() {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL || (typeof window !== 'undefined' ? window.location.origin : '')}/search`
+          redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL || (typeof window !== 'undefined' ? window.location.origin : '')}/onboarding`
         }
       });
       if (error) throw error;
@@ -93,7 +93,7 @@ export default function RegisterPage() {
       >
         <div className="text-center mb-8">
           <h2 className="text-3xl font-black bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
-            Gabung KosanKita
+            Gabung KosKosanKu
           </h2>
           <p className="text-slate-500 font-medium mt-2">Mulai kelola atau cari kosan impianmu sekarang</p>
         </div>

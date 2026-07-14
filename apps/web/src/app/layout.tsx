@@ -14,8 +14,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "KosanKita",
-  description: "Platform Sewa Kos Paling Sat-set",
+  title: "KosKosanKu",
+  description: "Platform Manajemen Kos Modern",
 };
 
 import { Toaster } from "sonner";

@@ -73,7 +73,7 @@ export default function LandingPage() {
       <nav className="flex bg-white shadow-[0_2px_10px_rgba(0,0,0,0.05)] px-5 md:px-8 py-4 items-center justify-between sticky top-0 z-50">
         <div className="flex items-center gap-8">
           <Link href="/" className="text-xl md:text-2xl font-black flex items-center gap-1.5 text-blue-600">
-            KosKu <span className="w-2.5 h-2.5 rounded-full bg-yellow-400"></span>
+            KosKosanKu <span className="w-2.5 h-2.5 rounded-full bg-yellow-400"></span>
           </Link>
           
           {/* Desktop Search */}
@@ -88,7 +88,7 @@ export default function LandingPage() {
         {/* Desktop Menu */}
         <div className="hidden md:flex items-center gap-6 text-sm font-bold text-slate-700">
           <Link href="/search" className="hover:text-blue-600 transition">Sewa Kos</Link>
-          <Link href="/dashboard/owner" className="hover:text-blue-600 transition">Mitra KosKu</Link>
+          <Link href="/dashboard/owner" className="hover:text-blue-600 transition">Mitra KosKosanKu</Link>
           <Link href="#" className="hover:text-blue-600 transition">Bantuan</Link>
           
           <div className="flex items-center gap-3 pl-4 border-l border-slate-200">

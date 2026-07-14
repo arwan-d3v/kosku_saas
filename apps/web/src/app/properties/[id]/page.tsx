@@ -42,6 +42,15 @@ export default function PublicPropertyDetails({ params }: { params: Promise<{ id
   const [paymentSuccess, setPaymentSuccess] = useState(false);
   const [createdBookingId, setCreatedBookingId] = useState<string | null>(null);
   const [showAuthGate, setShowAuthGate] = useState(false);
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+
+  const nextImage = () => {
+    setCurrentImageIndex((prev) => (prev + 1) % (property?.images?.length || 1));
+  };
+
+  const prevImage = () => {
+    setCurrentImageIndex((prev) => (prev === 0 ? (property?.images?.length || 1) - 1 : prev - 1));
+  };
 
   const router = useRouter();
 
@@ -140,7 +149,8 @@ export default function PublicPropertyDetails({ params }: { params: Promise<{ id
         body: JSON.stringify({
           roomId: selectedRoomId,
           startDate,
-          endDate: endDateStr
+          endDate: endDateStr,
+          paymentType
         })
       });
 
@@ -207,15 +217,57 @@ export default function PublicPropertyDetails({ params }: { params: Promise<{ id
           </button>
         </div>
 
-        {/* Main Image */}
-        <img 
-          src={images[0]} 
-          alt="Property" 
-          className="w-full h-full object-cover rounded-b-[2.5rem] shadow-sm"
-        />
+        {/* Main Image Carousel */}
+        <div className="absolute inset-0 rounded-b-[2.5rem] overflow-hidden bg-slate-100">
+          <AnimatePresence initial={false}>
+            <motion.img 
+              key={currentImageIndex}
+              src={images[currentImageIndex]} 
+              alt="Property" 
+              initial={{ opacity: 0, x: 50 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -50 }}
+              transition={{ duration: 0.3 }}
+              drag="x"
+              dragConstraints={{ left: 0, right: 0 }}
+              dragElastic={0.2}
+              onDragEnd={(e, { offset, velocity }) => {
+                const swipe = Math.abs(offset.x) * velocity.x;
+                if (swipe < -10000) {
+                  nextImage();
+                } else if (swipe > 10000) {
+                  prevImage();
+                } else if (offset.x < -50) {
+                  nextImage();
+                } else if (offset.x > 50) {
+                  prevImage();
+                }
+              }}
+              className="absolute inset-0 w-full h-full object-cover shadow-sm cursor-grab active:cursor-grabbing"
+            />
+          </AnimatePresence>
 
-        <div className="absolute bottom-6 right-6 bg-slate-900/60 backdrop-blur-sm text-white text-xs font-bold px-3 py-1.5 rounded-full border border-white/10">
-          1 / {images.length} Foto
+          {/* Navigation Arrows */}
+          {images.length > 1 && (
+            <>
+              <button 
+                onClick={prevImage}
+                className="absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-black/20 backdrop-blur-md text-white border border-white/20 flex items-center justify-center hover:bg-black/40 transition z-20 shadow-lg"
+              >
+                <ChevronLeft size={24} className="mr-0.5" />
+              </button>
+              <button 
+                onClick={nextImage}
+                className="absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-black/20 backdrop-blur-md text-white border border-white/20 flex items-center justify-center hover:bg-black/40 transition z-20 shadow-lg"
+              >
+                <ChevronLeft size={24} className="rotate-180 ml-0.5" />
+              </button>
+            </>
+          )}
+        </div>
+
+        <div className="absolute bottom-6 right-6 z-20 bg-slate-900/60 backdrop-blur-sm text-white text-xs font-bold px-3 py-1.5 rounded-full border border-white/10">
+          {currentImageIndex + 1} / {images.length} Foto
         </div>
       </div>
 
@@ -472,6 +524,19 @@ export default function PublicPropertyDetails({ params }: { params: Promise<{ id
                         </div>
                       </label>
                     )}
+
+                    {selectedRoom?.allow_custom_dp && selectedRoom?.custom_dp_percentage && (
+                      <label className={`flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-all ${paymentType === 'CUSTOM_DP' ? 'border-indigo-500 bg-indigo-50/50' : 'border-slate-200 hover:bg-slate-50'}`}>
+                        <input type="radio" name="paymentType" value="CUSTOM_DP" checked={paymentType === 'CUSTOM_DP'} onChange={() => setPaymentType('CUSTOM_DP')} className="w-4 h-4 text-indigo-600 focus:ring-indigo-500" />
+                        <div className="flex-1">
+                          <div className="flex justify-between items-center">
+                            <p className="font-bold text-sm text-slate-800">DP Fleksibel ({selectedRoom.custom_dp_percentage}%)</p>
+                            <span className="text-[10px] font-bold text-purple-600 bg-purple-50 px-2 py-0.5 rounded">Jeda {selectedRoom.custom_dp_duration_hours || 24} Jam</span>
+                          </div>
+                          <p className="text-xs text-slate-500">Bayar {selectedRoom.custom_dp_percentage}% dulu sesuai aturan kos</p>
+                        </div>
+                      </label>
+                    )}
                   </div>
                 </div>
 
@@ -489,7 +554,7 @@ export default function PublicPropertyDetails({ params }: { params: Promise<{ id
                   <hr className="border-slate-200/50" />
                   <div className="flex justify-between text-sm text-slate-800 font-black">
                     <span>Total Bayar</span>
-                    <span>{formatRupiah(paymentType === 'FULL' ? (Number(selectedRoom?.price_per_month) * durationMonths) + 10000 : paymentType === 'DP_10' ? ((Number(selectedRoom?.price_per_month) * durationMonths) * 0.10) + 10000 : ((Number(selectedRoom?.price_per_month) * durationMonths) * 0.25) + 10000)}</span>
+                    <span>{formatRupiah(paymentType === 'FULL' ? (Number(selectedRoom?.price_per_month) * durationMonths) + 10000 : paymentType === 'DP_10' ? ((Number(selectedRoom?.price_per_month) * durationMonths) * 0.10) + 10000 : paymentType === 'DP_25' ? ((Number(selectedRoom?.price_per_month) * durationMonths) * 0.25) + 10000 : ((Number(selectedRoom?.price_per_month) * durationMonths) * (selectedRoom?.custom_dp_percentage / 100)) + 10000)}</span>
                   </div>
                 </div>
 
@@ -529,7 +594,7 @@ export default function PublicPropertyDetails({ params }: { params: Promise<{ id
                   </div>
                   
                   <h3 className="text-xl font-black mb-2">Simulasi Midtrans Snap</h3>
-                  <p className="text-slate-400 text-xs px-2 mb-6">Integrasi Pembayaran Sandbox KosanKita</p>
+                  <p className="text-slate-400 text-xs px-2 mb-6">Integrasi Pembayaran Sandbox KosKosanKu</p>
                   
                   <div className="w-full bg-slate-800/50 border border-slate-700/60 rounded-2xl p-4 mb-8 text-left">
                     <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-1">Token Pembayaran</span>
@@ -537,7 +602,7 @@ export default function PublicPropertyDetails({ params }: { params: Promise<{ id
 
                     <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-0.5">Total Tagihan</span>
                     <span className="text-lg font-black text-indigo-300">
-                      {formatRupiah(paymentType === 'FULL' ? (Number(selectedRoom?.price_per_month) * durationMonths) + 10000 : paymentType === 'DP_10' ? ((Number(selectedRoom?.price_per_month) * durationMonths) * 0.10) + 10000 : ((Number(selectedRoom?.price_per_month) * durationMonths) * 0.25) + 10000)}
+                      {formatRupiah(paymentType === 'FULL' ? (Number(selectedRoom?.price_per_month) * durationMonths) + 10000 : paymentType === 'DP_10' ? ((Number(selectedRoom?.price_per_month) * durationMonths) * 0.10) + 10000 : paymentType === 'DP_25' ? ((Number(selectedRoom?.price_per_month) * durationMonths) * 0.25) + 10000 : ((Number(selectedRoom?.price_per_month) * durationMonths) * (selectedRoom?.custom_dp_percentage / 100)) + 10000)}
                     </span>
                   </div>
 

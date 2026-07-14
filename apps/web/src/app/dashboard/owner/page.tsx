@@ -68,9 +68,9 @@ export default function OwnerDashboard() {
       const totalRev = paidBookings.reduce((sum: number, b: any) => sum + Number(b.total_price), 0);
       setRevenue(totalRev);
 
-      // Filter early bird bookings (dp_type is not full and booking is recent)
+      // Filter early bird bookings (payment_type is not full and booking is recent)
       const ebBookings = bookings.filter((b: any) =>
-        (b.dp_type === 'DP_10' || b.dp_type === 'DP_25') &&
+        (b.payment_type === 'DP_10' || b.payment_type === 'DP_25') &&
         b.status === 'PAID'
       );
       setEarlyBirdBookings(ebBookings);
@@ -187,7 +187,7 @@ export default function OwnerDashboard() {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {earlyBirdBookings.map((booking, i) => {
-              const expireDate = new Date(booking.dp_expiry);
+              const expireDate = new Date(booking.dp_expires_at);
               const now = new Date();
               const diffMs = expireDate.getTime() - now.getTime();
               const isExpired = diffMs <= 0;
@@ -205,12 +205,12 @@ export default function OwnerDashboard() {
                 <div key={i} className="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 flex flex-col justify-between">
                   <div>
                     <div className="flex justify-between items-start mb-2">
-                      <h4 className="font-bold text-slate-800">{booking.tenant?.full_name || 'Penghuni'}</h4>
-                      <span className={`text-[10px] font-bold px-2 py-1 rounded-md ${booking.dp_type === 'DP_10' ? 'bg-rose-100 text-rose-700' : 'bg-orange-100 text-orange-700'}`}>
-                        {booking.dp_type === 'DP_10' ? 'Early Bird (DP 10%)' : 'Booking Aman (DP 25%)'}
+                      <h4 className="font-bold text-slate-800">{booking.customer?.full_name || 'Penghuni'}</h4>
+                      <span className={`text-[10px] font-bold px-2 py-1 rounded-md ${booking.payment_type === 'DP_10' ? 'bg-rose-100 text-rose-700' : 'bg-orange-100 text-orange-700'}`}>
+                        {booking.payment_type === 'DP_10' ? 'Early Bird (DP 10%)' : 'Booking Aman (DP 25%)'}
                       </span>
                     </div>
-                    <p className="text-xs text-slate-500 font-medium">{booking.room?.room_number || `Booking #${booking.id.substring(0, 8)}`}</p>
+                    <p className="text-xs text-slate-500 font-medium">{booking.rooms?.room_number || `Booking #${booking.id.substring(0, 8)}`}</p>
                     <div className="mt-3 flex items-center justify-between">
 
                       <CountdownTimer expiresAt={booking.dp_expires_at} />

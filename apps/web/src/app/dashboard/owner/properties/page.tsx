@@ -107,9 +107,22 @@ export default function PropertiesPage() {
     }
   };
 
+  const removePropertyImage = (indexToRemove: number) => {
+    setFormData(prev => ({
+      ...prev,
+      images: prev.images.filter((_, idx) => idx !== indexToRemove)
+    }));
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (submitting) return;
+
+    if (formData.images.length < 4) {
+      toast.error('Minimal harus melampirkan 4 foto properti.');
+      return;
+    }
+
     try {
       setSubmitting(true);
       toast.loading(editingId ? 'Memperbarui properti...' : 'Menyimpan properti baru...', { id: 'submit-toast' });
@@ -329,8 +342,16 @@ export default function PropertiesPage() {
                     <label className="block text-slate-600 font-bold text-sm mb-3">Foto Properti (Opsional)</label>
                     <div className="flex gap-3 overflow-x-auto pb-2">
                       {formData.images.map((img, idx) => (
-                        <div key={idx} className="relative w-24 h-24 flex-shrink-0 rounded-xl overflow-hidden border border-slate-200">
+                        <div key={idx} className="relative w-24 h-24 flex-shrink-0 rounded-xl overflow-hidden border border-slate-200 group">
                           <img src={img} alt="Property" className="w-full h-full object-cover" />
+                          <button
+                            type="button"
+                            onClick={() => removePropertyImage(idx)}
+                            className="absolute top-1 right-1 w-6 h-6 bg-red-500/80 hover:bg-red-600 text-white rounded-full flex items-center justify-center backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-all z-10 shadow-sm"
+                            title="Hapus foto"
+                          >
+                            <X size={14} />
+                          </button>
                         </div>
                       ))}
                       <button 

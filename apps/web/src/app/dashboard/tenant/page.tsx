@@ -86,10 +86,17 @@ export default function TenantDashboard() {
     if (!selectedBooking) return;
 
     try {
-      await fetchWithAuth('/payment/confirm', {
-        method: 'POST',
-        body: JSON.stringify({ bookingId: selectedBooking.id })
-      });
+      if (selectedBooking.status === 'PAID' && selectedBooking.payment_type !== 'FULL' && !selectedBooking.balance_paid) {
+        await fetchWithAuth('/payment/confirm-balance', {
+          method: 'POST',
+          body: JSON.stringify({ bookingId: selectedBooking.id })
+        });
+      } else {
+        await fetchWithAuth('/payment/confirm', {
+          method: 'POST',
+          body: JSON.stringify({ bookingId: selectedBooking.id })
+        });
+      }
 
       setPaymentSuccess(true);
       setTimeout(() => {
@@ -119,7 +126,7 @@ export default function TenantDashboard() {
         <div>
           <h1 className="text-2xl md:text-3xl font-black text-slate-800 tracking-tight">Dashboard Penghuni</h1>
           <p className="text-slate-500 font-medium text-sm mt-1">
-            Halo, {userProfile?.full_name || 'Teman KosKita'}!
+            Halo, {userProfile?.full_name || 'Teman KosKosanKu'}!
           </p>
         </div>
         <button 
@@ -194,20 +201,26 @@ export default function TenantDashboard() {
 
                   <div className="flex flex-col md:items-end justify-between gap-4 md:text-right border-t md:border-t-0 pt-4 md:pt-0 border-slate-100">
                     <div>
-                      <span className="text-[10px] text-slate-400 uppercase tracking-wider font-bold">Total Pembayaran</span>
+                      <span className="text-[10px] text-slate-400 uppercase tracking-wider font-bold">
+                        {booking.payment_type !== 'FULL' ? (booking.payment_type === 'DP_10' ? 'Pembayaran DP 10%' : 'Pembayaran DP 25%') : 'Total Pembayaran'}
+                      </span>
                       <p className="text-base font-black text-slate-800">
-                        {booking.payment_type !== 'FULL' && !isPaid ? formatRupiah(Number(booking.dp_amount)) : formatRupiah(Number(booking.total_price))}
-                        {booking.payment_type !== 'FULL' && !isPaid && <span className="text-xs text-slate-400 font-normal ml-1">(DP)</span>}
+                        {booking.payment_type !== 'FULL' ? formatRupiah(Number(booking.dp_amount)) : formatRupiah(Number(booking.total_price))}
                       </p>
-                      {booking.payment_type !== 'FULL' && !isPaid && booking.dp_expires_at && (
+                      {booking.payment_type !== 'FULL' && (
+                        <p className="text-[10px] text-slate-500 font-bold mt-1">
+                          Sisa Pelunasan: {formatRupiah(Number(booking.total_price) - Number(booking.dp_amount))}
+                        </p>
+                      )}
+                      {booking.payment_type !== 'FULL' && booking.dp_expires_at && (
                         <div className="mt-1 flex justify-end text-xs"><CountdownTimer expiresAt={booking.dp_expires_at} /></div>
                       )}
                     </div>
 
                     <div className="flex items-center gap-3">
-                      <span className={`px-3 py-1 rounded-full text-xs font-black flex items-center gap-1 ${isPaid ? 'bg-emerald-100 text-emerald-600' : 'bg-amber-100 text-amber-600'}`}>
-                        {isPaid ? <CheckCircle size={12} /> : <AlertCircle size={12} />}
-                        {isPaid ? 'Terbayar' : 'Menunggu Pembayaran'}
+                      <span className={`px-3 py-1 rounded-full text-xs font-black flex items-center gap-1 ${(booking.payment_type !== 'FULL' && booking.balance_paid) || (booking.payment_type === 'FULL' && isPaid) ? 'bg-emerald-100 text-emerald-600' : isPaid ? 'bg-blue-100 text-blue-600' : 'bg-amber-100 text-amber-600'}`}>
+                        {((booking.payment_type !== 'FULL' && booking.balance_paid) || (booking.payment_type === 'FULL' && isPaid)) ? <CheckCircle size={12} /> : isPaid ? <CheckCircle size={12} /> : <AlertCircle size={12} />}
+                        {((booking.payment_type !== 'FULL' && booking.balance_paid) || (booking.payment_type === 'FULL' && isPaid)) ? 'Lunas' : isPaid ? 'DP Terbayar' : 'Menunggu Pembayaran'}
                       </span>
 
                       {!isPaid && (
@@ -217,6 +230,16 @@ export default function TenantDashboard() {
                           className="clay-button bg-indigo-500 text-white text-xs !px-4 !py-2 shadow-md shadow-indigo-100 flex items-center gap-1"
                         >
                           Bayar <ArrowRight size={14} />
+                        </motion.button>
+                      )}
+
+                      {isPaid && booking.payment_type !== 'FULL' && !booking.balance_paid && (
+                        <motion.button
+                          whileTap={{ scale: 0.95 }}
+                          onClick={() => handlePaymentInit(booking)}
+                          className="clay-button bg-indigo-500 text-white text-xs !px-4 !py-2 shadow-md shadow-indigo-100 flex items-center gap-1"
+                        >
+                          Lunasi Sekarang <ArrowRight size={14} />
                         </motion.button>
                       )}
                     </div>
@@ -249,15 +272,19 @@ export default function TenantDashboard() {
                   </div>
                   
                   <h3 className="text-xl font-black mb-2">Simulasi Midtrans Snap</h3>
-                  <p className="text-slate-400 text-xs px-2 mb-6">Integrasi Pembayaran Sandbox KosanKita</p>
+                  <p className="text-slate-400 text-xs px-2 mb-6">Integrasi Pembayaran Sandbox KosKosanKu</p>
                   
                   <div className="w-full bg-slate-800/50 border border-slate-700/60 rounded-2xl p-4 mb-8 text-left">
                     <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-1">ID Transaksi</span>
                     <span className="text-xs font-mono break-all text-slate-300 block mb-3">{selectedBooking.id}</span>
 
-                    <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-0.5">Total Tagihan</span>
+                    <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-0.5">
+                      {selectedBooking.status === 'PAID' && selectedBooking.payment_type !== 'FULL' && !selectedBooking.balance_paid ? 'Pelunasan Tagihan' : 'Total Tagihan'}
+                    </span>
                     <span className="text-lg font-black text-indigo-300">
-                      {selectedBooking.payment_type !== 'FULL' && selectedBooking.status !== 'PAID' ? formatRupiah(Number(selectedBooking.dp_amount)) : formatRupiah(Number(selectedBooking.total_price))}
+                      {selectedBooking.status === 'PAID' && selectedBooking.payment_type !== 'FULL' && !selectedBooking.balance_paid
+                        ? formatRupiah(Number(selectedBooking.total_price) - Number(selectedBooking.dp_amount))
+                        : selectedBooking.payment_type !== 'FULL' ? formatRupiah(Number(selectedBooking.dp_amount)) : formatRupiah(Number(selectedBooking.total_price))}
                     </span>
                   </div>
 

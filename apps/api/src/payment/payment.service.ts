@@ -92,4 +92,69 @@ export class PaymentService {
 
     return { success: true, message: 'Pembayaran berhasil dikonfirmasi' };
   }
+
+  async createCheckoutBalanceToken(bookingId: string, userId: string) {
+    const supabase = this.supabaseService.getClient();
+
+    // 1. Verify booking exists, belongs to user, and balance is not paid
+    const { data: booking, error: bookingError } = await supabase
+      .from('bookings')
+      .select('*')
+      .eq('id', bookingId)
+      .eq('customer_id', userId)
+      .single();
+
+    if (bookingError || !booking) {
+      throw new NotFoundException('Data booking tidak ditemukan');
+    }
+
+    if (booking.balance_paid) {
+      throw new BadRequestException('Sisa tagihan sudah dilunasi');
+    }
+
+    if (booking.payment_type === 'FULL') {
+      throw new BadRequestException('Tipe pembayaran ini tidak memiliki sisa tagihan');
+    }
+
+    // 2. Generate a mock Snap token
+    const mockToken = `snap-token-balance-mock-${bookingId}-${Date.now()}`;
+
+    // Note: in a real app you might save this specific token to the DB if needed.
+    
+    return { token: mockToken };
+  }
+
+  async confirmBalancePayment(bookingId: string, userId: string) {
+    const supabase = this.supabaseService.getClient();
+
+    // 1. Verify booking exists and belongs to the user
+    const { data: booking, error: bookingError } = await supabase
+      .from('bookings')
+      .select('*')
+      .eq('id', bookingId)
+      .eq('customer_id', userId)
+      .single();
+
+    if (bookingError || !booking) {
+      throw new NotFoundException('Data booking tidak ditemukan');
+    }
+
+    if (booking.balance_paid) {
+      return { success: true, message: 'Sisa tagihan sudah dilunasi' };
+    }
+
+    // 2. Update booking balance_paid to true
+    const { error: updateBookingError } = await supabase
+      .from('bookings')
+      .update({ balance_paid: true })
+      .eq('id', bookingId);
+
+    if (updateBookingError) {
+      throw new InternalServerErrorException(
+        'Gagal memperbarui status pelunasan: ' + updateBookingError.message,
+      );
+    }
+
+    return { success: true, message: 'Pelunasan sisa tagihan berhasil dikonfirmasi' };
+  }
 }

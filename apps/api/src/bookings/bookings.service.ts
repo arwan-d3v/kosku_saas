@@ -15,7 +15,7 @@ export class BookingsService {
     roomId: string,
     startDate: string,
     endDate?: string,
-    paymentType: 'FULL' | 'DP_10' | 'DP_25' = 'FULL',
+    paymentType: 'FULL' | 'DP_10' | 'DP_25' | 'CUSTOM_DP' = 'FULL',
   ) {
     const supabase = this.supabaseService.getClient();
 
@@ -68,6 +68,13 @@ export class BookingsService {
       const expireDate = new Date();
       expireDate.setDate(expireDate.getDate() + 7);
       dpExpiresAt = expireDate.toISOString();
+    } else if (paymentType === 'CUSTOM_DP') {
+      if (!room.allow_custom_dp || !room.custom_dp_percentage)
+        throw new BadRequestException('Kamar ini tidak menerima Custom DP');
+      dpAmount = totalPrice * (room.custom_dp_percentage / 100);
+      const expireDate = new Date();
+      expireDate.setHours(expireDate.getHours() + (room.custom_dp_duration_hours || 24));
+      dpExpiresAt = expireDate.toISOString();
     }
 
     // 3. Create booking record
@@ -83,6 +90,7 @@ export class BookingsService {
         payment_type: paymentType,
         dp_amount: dpAmount,
         dp_expires_at: dpExpiresAt,
+        balance_paid: paymentType === 'FULL',
       })
       .select('*, rooms(*, properties(*))')
       .single();

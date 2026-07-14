@@ -31,6 +31,9 @@ export default function PropertyDetailsPage({ params }: { params: Promise<{ id: 
     facilities: [] as string[],
     allow_dp_10: false,
     allow_dp_25: false,
+    allow_custom_dp: false,
+    custom_dp_percentage: '',
+    custom_dp_duration_hours: '',
     images: [] as string[]
   });
   const [submitting, setSubmitting] = useState(false);
@@ -62,7 +65,7 @@ export default function PropertyDetailsPage({ params }: { params: Promise<{ id: 
   const openAddModal = () => {
     setEditMode(false);
     setEditingRoomId(null);
-    setFormData({ room_number: '', price_per_month: '', status: true, facilities: [], allow_dp_10: false, allow_dp_25: false, images: [] });
+    setFormData({ room_number: '', price_per_month: '', status: true, facilities: [], allow_dp_10: false, allow_dp_25: false, allow_custom_dp: false, custom_dp_percentage: '', custom_dp_duration_hours: '', images: [] });
     setIsModalOpen(true);
   };
 
@@ -76,6 +79,9 @@ export default function PropertyDetailsPage({ params }: { params: Promise<{ id: 
       facilities: room.facilities || [],
       allow_dp_10: room.allow_dp_10 || false,
       allow_dp_25: room.allow_dp_25 || false,
+      allow_custom_dp: room.allow_custom_dp || false,
+      custom_dp_percentage: room.custom_dp_percentage ? room.custom_dp_percentage.toString() : '',
+      custom_dp_duration_hours: room.custom_dp_duration_hours ? room.custom_dp_duration_hours.toString() : '',
       images: room.images || []
     });
     setIsModalOpen(true);
@@ -131,9 +137,21 @@ export default function PropertyDetailsPage({ params }: { params: Promise<{ id: 
     }
   };
 
+  const removeRoomImage = (indexToRemove: number) => {
+    setFormData(prev => ({
+      ...prev,
+      images: prev.images.filter((_, idx) => idx !== indexToRemove)
+    }));
+  };
+
   const handleAddOrEditRoom = async (e: React.FormEvent) => {
     e.preventDefault();
     if (submitting) return;
+
+    if (formData.images.length < 3) {
+      toast.error('Minimal harus melampirkan 3 foto kamar.');
+      return;
+    }
 
     try {
       setSubmitting(true);
@@ -142,11 +160,14 @@ export default function PropertyDetailsPage({ params }: { params: Promise<{ id: 
       const payload = {
         room_number: formData.room_number,
         price_per_month: parseInt(formData.price_per_month.replace(/\D/g, '') || '0', 10),
-        status: formData.status,
+        is_available: formData.status,
         facilities: formData.facilities,
-        images: formData.images,
         allow_dp_10: formData.allow_dp_10,
-        allow_dp_25: formData.allow_dp_25
+        allow_dp_25: formData.allow_dp_25,
+        allow_custom_dp: formData.allow_custom_dp,
+        custom_dp_percentage: formData.custom_dp_percentage ? Number(formData.custom_dp_percentage) : null,
+        custom_dp_duration_hours: formData.custom_dp_duration_hours ? Number(formData.custom_dp_duration_hours) : null,
+        images: formData.images
       };
 
       if (editMode && editingRoomId) {
@@ -402,8 +423,16 @@ export default function PropertyDetailsPage({ params }: { params: Promise<{ id: 
                   <label className="block text-slate-600 font-bold text-sm mb-3">Foto Kamar (Opsional)</label>
                   <div className="flex gap-3 overflow-x-auto pb-2">
                     {formData.images.map((img, idx) => (
-                      <div key={idx} className="relative w-24 h-24 flex-shrink-0 rounded-xl overflow-hidden border border-slate-200">
+                      <div key={idx} className="relative w-24 h-24 flex-shrink-0 rounded-xl overflow-hidden border border-slate-200 group">
                         <img src={img} alt="Room" className="w-full h-full object-cover" />
+                        <button
+                          type="button"
+                          onClick={() => removeRoomImage(idx)}
+                          className="absolute top-1 right-1 w-6 h-6 bg-red-500/80 hover:bg-red-600 text-white rounded-full flex items-center justify-center backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-all z-10 shadow-sm"
+                          title="Hapus foto"
+                        >
+                          <X size={14} />
+                        </button>
                       </div>
                     ))}
                     <button 
@@ -474,34 +503,77 @@ export default function PropertyDetailsPage({ params }: { params: Promise<{ id: 
                   </div>
                 </div>
 
-                <div>
-                  <label className="block text-slate-600 font-bold text-sm mb-2">Status Ketersediaan</label>
-
-                  <div className="mb-6">
-                    <label className="block text-slate-600 font-bold text-sm mb-3">Pengaturan Uang Muka (DP)</label>
-                    <div className="flex gap-4 flex-wrap">
-                      <label className="flex items-center gap-2 cursor-pointer bg-slate-50 px-4 py-2 rounded-xl border border-slate-200 hover:border-indigo-200 transition-colors">
-                        <input
-                          type="checkbox"
-                          checked={formData.allow_dp_10}
-                          onChange={(e) => setFormData({...formData, allow_dp_10: e.target.checked})}
-                          className="w-4 h-4 text-indigo-600 rounded focus:ring-indigo-500 cursor-pointer"
+                <div className="pt-4 border-t border-slate-100">
+                  <label className="block text-slate-600 font-bold text-sm mb-3">Pengaturan Pembayaran Uang Muka (DP)</label>
+                  <div className="grid gap-3">
+                    <label className={`flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-all ${formData.allow_dp_10 ? 'border-indigo-500 bg-indigo-50/50' : 'border-slate-200'}`}>
+                      <input 
+                        type="checkbox" 
+                        checked={formData.allow_dp_10} 
+                        onChange={(e) => setFormData(prev => ({...prev, allow_dp_10: e.target.checked}))}
+                        className="w-4 h-4 text-indigo-600 rounded"
+                      />
+                      <div className="flex-1">
+                        <p className="font-bold text-sm text-slate-800">Izinkan Pembayaran DP 10%</p>
+                        <p className="text-[10px] text-slate-500">Penyewa bisa booking bayar 10% dulu (Hangus 24 Jam)</p>
+                      </div>
+                    </label>
+                    <label className={`flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-all ${formData.allow_dp_25 ? 'border-indigo-500 bg-indigo-50/50' : 'border-slate-200'}`}>
+                      <input 
+                        type="checkbox" 
+                        checked={formData.allow_dp_25} 
+                        onChange={(e) => setFormData(prev => ({...prev, allow_dp_25: e.target.checked}))}
+                        className="w-4 h-4 text-indigo-600 rounded"
+                      />
+                      <div className="flex-1">
+                        <p className="font-bold text-sm text-slate-800">Izinkan Pembayaran DP 25%</p>
+                        <p className="text-[10px] text-slate-500">Penyewa bayar 25% untuk amankan kamar (Pelunasan diberi waktu 7 Hari)</p>
+                      </div>
+                    </label>
+                    <div className={`p-3 rounded-xl border transition-all ${formData.allow_custom_dp ? 'border-indigo-500 bg-indigo-50/50' : 'border-slate-200'}`}>
+                      <label className="flex items-center gap-3 cursor-pointer">
+                        <input 
+                          type="checkbox" 
+                          checked={formData.allow_custom_dp} 
+                          onChange={(e) => setFormData(prev => ({...prev, allow_custom_dp: e.target.checked}))}
+                          className="w-4 h-4 text-indigo-600 rounded"
                         />
-                        <span className="font-bold text-slate-700 text-sm">Izinkan DP 10%</span>
+                        <div className="flex-1">
+                          <p className="font-bold text-sm text-slate-800">Izinkan Custom DP</p>
+                          <p className="text-[10px] text-slate-500">Atur sendiri persentase DP dan batas waktu pelunasan</p>
+                        </div>
                       </label>
-                      <label className="flex items-center gap-2 cursor-pointer bg-slate-50 px-4 py-2 rounded-xl border border-slate-200 hover:border-indigo-200 transition-colors">
-                        <input
-                          type="checkbox"
-                          checked={formData.allow_dp_25}
-                          onChange={(e) => setFormData({...formData, allow_dp_25: e.target.checked})}
-                          className="w-4 h-4 text-indigo-600 rounded focus:ring-indigo-500 cursor-pointer"
-                        />
-                        <span className="font-bold text-slate-700 text-sm">Izinkan DP 25%</span>
-                      </label>
+                      {formData.allow_custom_dp && (
+                        <div className="grid grid-cols-2 gap-3 mt-3 pl-7">
+                          <div>
+                            <label className="block text-slate-600 font-bold text-[10px] mb-1">Persentase (%)</label>
+                            <input
+                              type="number"
+                              placeholder="Misal: 50"
+                              value={formData.custom_dp_percentage}
+                              onChange={(e) => setFormData(prev => ({...prev, custom_dp_percentage: e.target.value}))}
+                              className="w-full px-3 py-2 text-sm bg-white border border-slate-200 rounded-lg outline-none focus:ring-2 ring-indigo-300"
+                              required={formData.allow_custom_dp}
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-slate-600 font-bold text-[10px] mb-1">Batas Waktu (Jam)</label>
+                            <input
+                              type="number"
+                              placeholder="Misal: 48"
+                              value={formData.custom_dp_duration_hours}
+                              onChange={(e) => setFormData(prev => ({...prev, custom_dp_duration_hours: e.target.value}))}
+                              className="w-full px-3 py-2 text-sm bg-white border border-slate-200 rounded-lg outline-none focus:ring-2 ring-indigo-300"
+                              required={formData.allow_custom_dp}
+                            />
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </div>
-
-                  <label className="block text-slate-600 font-bold text-sm mb-3 mt-4">Status Kamar</label>
+                </div>
+                <div className="pt-4 border-t border-slate-100">
+                  <label className="block text-slate-600 font-bold text-sm mb-3">Status Ketersediaan Kamar</label>
                   <div className="flex gap-4 mt-2">
                     <label className="flex items-center gap-2 cursor-pointer bg-emerald-50 px-4 py-2 rounded-xl border border-emerald-100 transition-colors">
                       <input 
@@ -525,7 +597,6 @@ export default function PropertyDetailsPage({ params }: { params: Promise<{ id: 
                     </label>
                   </div>
                 </div>
-
                 <motion.button
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}

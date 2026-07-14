@@ -20,7 +20,7 @@ export default function LoginPage() {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL || (typeof window !== 'undefined' ? window.location.origin : '')}/search`
+          redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL || (typeof window !== 'undefined' ? window.location.origin : '')}/onboarding`
         }
       });
       if (error) throw error;
@@ -48,10 +48,10 @@ export default function LoginPage() {
       }
 
       if (data.user) {
-        // Fetch user's role from public.users
+        // Fetch user's role and phone from public.users
         const { data: profile, error: profileError } = await supabase
           .from('users')
-          .select('role')
+          .select('role, phone')
           .eq('id', data.user.id)
           .single();
 
@@ -61,8 +61,10 @@ export default function LoginPage() {
           return;
         }
 
-        // Redirect based on role
-        if (profile?.role === 'TENANT_ADMIN' || profile?.role === 'SUPERADMIN') {
+        // Redirect based on profile completion
+        if (!profile?.phone) {
+          router.push('/onboarding');
+        } else if (profile?.role === 'TENANT_ADMIN' || profile?.role === 'SUPERADMIN') {
           router.push('/dashboard/owner');
         } else {
           router.push('/search');
@@ -91,7 +93,7 @@ export default function LoginPage() {
           <h2 className="text-3xl font-black bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
             Selamat Datang
           </h2>
-          <p className="text-slate-500 font-medium mt-2">Masuk ke akun KosanKita Anda</p>
+          <p className="text-slate-500 font-medium mt-2">Masuk ke akun KosKosanKu Anda</p>
         </div>
 
         {errorMsg && (

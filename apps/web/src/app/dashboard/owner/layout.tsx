@@ -55,7 +55,7 @@ export default function OwnerLayout({ children }: { children: React.ReactNode })
       <aside className="w-72 fixed h-full p-6 hidden lg:block z-10">
         <div className="liquid-glass h-full rounded-4xl flex flex-col p-8 shadow-xl">
           <div className="text-2xl font-black bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent mb-12">
-            KosanKita
+            KosKosanKu
           </div>
 
           <nav className="flex-1 space-y-4">

@@ -47,3 +47,26 @@
 **Priority Recommendations:**
 1.  Verify the authentication callback redirect succeeds in production after environment variables are deployed.
 2.  Validate the backend API (`RoomsController` and `RoomsService`) successfully persists the newly enabled down payment flags.
+
+---
+
+**Last Editor:** Antigravity (Agent)
+**Timestamp:** Tue Jul 14 2026
+
+**Changes Made:**
+1. **Photo Management:** Added functionality to delete photos in Property and Room editors. Enforced validation rules (min 4 photos for properties, min 3 photos for rooms).
+2. **DP Display Sync:** Updated Tenant and Owner Dashboards to correctly display actual DP amounts instead of full prices when users choose a Down Payment. Added clear payment type badges (DP 10%, DP 25%).
+3. **Countdown Timer:** Integrated the CountdownTimer component into both Owner and Tenant dashboards for DP transactions. Modified it to automatically display the remaining time in "Days" when the time left exceeds 24 hours.
+4. **Custom DP & Balance Settlement:**
+   - Designed a database migration to introduce `CUSTOM_DP` type, custom percentage, and duration in the `rooms` table. Added `balance_paid` tracking to the `bookings` table.
+   - Updated the API to accommodate balance payments via Snap Simulator and to calculate Custom DP logic.
+   - Enhanced the UI to allow owners to define Custom DP per room, allow tenants to choose it during booking, and provide a "Lunasi Sekarang" (Pay Balance) button on the tenant dashboard.
+5. **Rebranding:** Renamed all instances of "KosanKita", "KosKita", and "KosKu" to the new brand **"KosKosanKu"** globally across layout titles, dashboards, and landing pages.
+
+**Next Needs:**
+*   Ensure the latest database migration `20240715000000_add_custom_dp.sql` is executed in the production/cloud Supabase environment.
+*   Test the full Custom DP and balance payment flow from booking to final settlement.
+
+**Priority Recommendations:**
+1. Manually apply the new SQL migration for Custom DP if using a managed Supabase project.
+2. Deploy the latest frontend and backend builds.
