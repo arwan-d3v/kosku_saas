@@ -91,3 +91,20 @@
 **Priority Recommendations:**
 1. Ensure the new migrations are pushed to the database (via Web UI since CLI is not configured locally).
 2. Test the print report functionality on the Owner Dashboard to ensure formatting holds up on physical prints/PDFs.
+
+---
+
+**Last Editor:** Antigravity (Agent)
+**Timestamp:** Tue Jul 14 2026
+
+**Changes Made:**
+1. **Tenant Dashboard Overhaul:** Modernized the Tenant Dashboard layout to match the Owner Dashboard's analytical view. Added a "Stats Grid" (Total Pengeluaran, Kosan Aktif, Total Deposit) and a Recharts BarChart simulating expense history.
+2. **Custom Deposit Input:** Enhanced the "Isi Deposit" functionality. Tenants can now input a custom deposit amount (minimum Rp 500.000) through a popup modal before proceeding to the payment simulator.
+3. **Print Feature for Tenants:** Added a "Cetak Laporan" button to the Tenant Dashboard, mirroring the feature in the Owner Dashboard, allowing tenants to print or save their rental analytics and booking status as PDF.
+
+**Next Needs:**
+* Integrate the real expense history for the Tenant Dashboard chart (currently using mock data `expenseData` for visualization).
+* Wait for user testing on the complete custom deposit and balance settlement flows.
+
+**Priority Recommendations:**
+1. Consider replacing the static chart data in the Tenant Dashboard with real historical payment aggregation from the backend.
