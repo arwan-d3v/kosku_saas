@@ -165,7 +165,7 @@ export default function OwnerDashboard() {
                 <YAxis yAxisId="right" orientation="right" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#64748b' }} />
                 <Tooltip 
                   contentStyle={{ borderRadius: '16px', border: 'none', boxShadow: '0 4px 20px rgba(0,0,0,0.08)' }}
-                  formatter={(value: any, name: string) => [
+                  formatter={(value: any, name: any) => [
                     name === 'revenue' ? formatRupiah(Number(value) || 0) : value, 
                     name === 'revenue' ? 'Pendapatan' : 'Jumlah Rental'
                   ]}
