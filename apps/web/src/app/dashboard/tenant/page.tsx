@@ -12,6 +12,7 @@ import {
   LogOut, 
   CheckCircle, 
   ArrowRight,
+  TrendingUp,
   Wallet,
   ShieldCheck,
   History,
