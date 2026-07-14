@@ -34,7 +34,7 @@
 ---
 
 **Last Editor:** Jules (Agent)
-**Timestamp:** $(date)
+**Timestamp:** Mon Jul 13 2026
 
 **Changes Made:**
 *   Modified `apps/web/src/app/login/page.tsx` and `apps/web/src/app/register/page.tsx` to override `redirectTo` for Google OAuth using `process.env.NEXT_PUBLIC_SITE_URL` to prevent misrouting to `localhost:3000` in production environments.
