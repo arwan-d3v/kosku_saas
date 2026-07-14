@@ -85,7 +85,7 @@ export default function BottomNavigation() {
       { 
         label: isAuthenticated ? 'Akun' : 'Masuk', 
         icon: <User size={20} />, 
-        href: isAuthenticated ? (role === 'TENANT_ADMIN' || role === 'SUPERADMIN' ? '/dashboard/owner' : '/dashboard/tenant') : '/login' 
+        href: isAuthenticated ? '/profile' : '/login' 
       },
     ];
   }

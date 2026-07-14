@@ -26,7 +26,13 @@ export class UsersService {
 
   async updateProfile(
     userId: string,
-    data: { full_name?: string; avatar_url?: string },
+    data: { 
+      full_name?: string; 
+      avatar_url?: string; 
+      phone_number?: string; 
+      university?: string; 
+      domicile_address?: string; 
+    },
   ) {
     const supabase = this.supabaseService.getClient();
 
